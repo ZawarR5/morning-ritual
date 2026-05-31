@@ -1,0 +1,6 @@
+{
+  "name": "Morning Ritual",
+  "description": "An intentional morning ritual companion featuring mindfulness, deep breathwork guidance, settings controls, and AI-curated manifestations.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
