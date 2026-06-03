@@ -16,6 +16,7 @@ import {
 import FourQulView from "./components/FourQulView";
 import { MindsetId, RitualItem, SettingsConfig, UserProfile } from "./types";
 import OnboardingModal from "./components/OnboardingModal";
+import { MessageCircle } from "lucide-react";
 import { getMood } from "./themes";
 
 export default function App() {
@@ -229,6 +230,10 @@ export default function App() {
     setStreakDays((prev) => prev + 1);
   };
 
+  const handleDecrementStreak = () => {
+    setStreakDays((prev) => Math.max(0, prev - 1));
+  };
+
   // Find info about selected active mindset
   const activeMindset = mindsets.find((m) => m.id === activeMindsetId) || mindsets[0];
 
@@ -256,6 +261,7 @@ export default function App() {
         onUpdateProfile={setProfile}
         streakDays={streakDays}
         onIncrementStreak={handleIncrementStreak}
+        onDecrementStreak={handleDecrementStreak}
         mood={mood}
         onMoodChange={setMood}
       />
@@ -308,6 +314,16 @@ export default function App() {
           <FourQulView onFinish={() => setActiveTab("today")} />
         )}
       </main>
+
+      {/* Floating WhatsApp support button */}
+      <a
+        href="https://wa.me/923119943699"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="fixed bottom-24 right-5 z-50 w-12 h-12 rounded-full bg-green-500/20 border border-green-500/30 flex items-center justify-center text-green-400 hover:bg-green-500/30 hover:scale-110 transition-all animate-pulse shadow-[0_0_20px_rgba(34,197,94,0.3)]"
+      >
+        <MessageCircle className="w-6 h-6" />
+      </a>
 
       {/* Persistent Bottom navigation menu bar */}
       <BottomNavBar activeTab={activeTab} onTabChange={setActiveTab} />

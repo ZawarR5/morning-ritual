@@ -12,6 +12,7 @@ interface NavigationDrawerProps {
   onUpdateProfile: (profile: UserProfile) => void;
   streakDays: number;
   onIncrementStreak: () => void;
+  onDecrementStreak: () => void;
   mood: string;
   onMoodChange: (mood: string) => void;
 }
@@ -23,6 +24,7 @@ export default function NavigationDrawer({
   onUpdateProfile,
   streakDays,
   onIncrementStreak,
+  onDecrementStreak,
   mood,
   onMoodChange,
 }: NavigationDrawerProps) {
@@ -212,12 +214,21 @@ export default function NavigationDrawer({
                 <p className="text-[11px] text-zinc-400 leading-normal">
                   Rituallize early every single day to fuel your inner momentum.
                 </p>
-                <button
-                  onClick={onIncrementStreak}
-                  className="mt-2 text-center text-xs font-semibold py-2 rounded bg-[var(--accent)]/10 hover:bg-[var(--accent)]/25 text-[var(--accent)] border border-[var(--accent)]/15 active:scale-95 transition-all cursor-pointer"
-                >
-                  Log Today's Rise
-                </button>
+                <div className="flex gap-2 mt-2">
+                  <button
+                    onClick={onIncrementStreak}
+                    className="flex-1 text-center text-xs font-semibold py-2 rounded bg-[var(--accent)]/10 hover:bg-[var(--accent)]/25 text-[var(--accent)] border border-[var(--accent)]/15 active:scale-95 transition-all cursor-pointer"
+                  >
+                    Log Today's Rise
+                  </button>
+                  <button
+                    onClick={onDecrementStreak}
+                    className="text-xs font-semibold py-2 px-3 rounded bg-red-500/10 hover:bg-red-500/25 text-red-400 border border-red-500/15 active:scale-95 transition-all cursor-pointer"
+                    title="Decrease streak"
+                  >
+                    −1
+                  </button>
+                </div>
               </div>
             </nav>
 
