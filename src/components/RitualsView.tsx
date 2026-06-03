@@ -34,6 +34,7 @@ export default function RitualsView({
   const [pendingHour, setPendingHour] = useState(config.notificationHour);
   const [pendingMinute, setPendingMinute] = useState(config.notificationMinute);
   const [pendingPeriod, setPendingPeriod] = useState(config.notificationPeriod);
+  const [showDone, setShowDone] = useState(false);
 
   const hours = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"];
   const minutes = Array.from({ length: 12 }, (_, i) => String(i * 5).padStart(2, "0"));
@@ -152,10 +153,14 @@ export default function RitualsView({
           {/* SET button + Under dial sunrise notification message */}
           <div className="mt-6 flex items-center gap-3">
             <button
-              onClick={() => onUpdateConfig({ notificationHour: pendingHour, notificationMinute: pendingMinute, notificationPeriod: pendingPeriod })}
-              className="px-8 py-3 rounded-xl bg-[var(--accent)] text-black font-bold text-sm tracking-widest uppercase hover:opacity-90 transition-all cursor-pointer"
+              onClick={() => {
+                onUpdateConfig({ notificationHour: pendingHour, notificationMinute: pendingMinute, notificationPeriod: pendingPeriod });
+                setShowDone(true);
+                setTimeout(() => setShowDone(false), 2000);
+              }}
+              className="px-8 py-3 rounded-xl bg-[var(--accent)] text-black font-bold text-sm tracking-widest uppercase hover:opacity-90 transition-all cursor-pointer min-w-[80px]"
             >
-              Set
+              {showDone ? "Done" : "Set"}
             </button>
             <div className="flex items-center gap-3 p-3.5 rounded-xl bg-[#0b0b0c] border border-white/5 select-none text-xs text-zinc-400 flex-1">
               <Sun className="w-4 h-4 text-[var(--accent)]" />
