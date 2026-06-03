@@ -61,8 +61,19 @@ export default function PrayerTrackerView() {
   useEffect(() => {
     if (allChecked) {
       setShowConfetti(true);
-      const timer = setTimeout(() => setShowConfetti(false), 5000);
-      return () => clearTimeout(timer);
+      const audio = new Audio("/party-popper.mp3");
+      audio.volume = 0.5;
+      audio.play().catch(() => {});
+      const timer = setTimeout(() => {
+        setShowConfetti(false);
+        audio.pause();
+        audio.currentTime = 0;
+      }, 5000);
+      return () => {
+        clearTimeout(timer);
+        audio.pause();
+        audio.currentTime = 0;
+      };
     }
   }, [allChecked]);
 
