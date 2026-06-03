@@ -5,12 +5,18 @@ const AUDIO_URL = "/new-bg-music.mp3";
 
 export default function QuietMindView() {
   const [soundEnabled, setSoundEnabled] = useState(true);
+  const [volume, setVolume] = useState(0.15);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     if (!audioRef.current) return;
+    audioRef.current.volume = volume;
     audioRef.current.play().then(() => setSoundEnabled(true)).catch(() => setSoundEnabled(false));
   }, []);
+
+  useEffect(() => {
+    if (audioRef.current) audioRef.current.volume = volume;
+  }, [volume]);
 
   const handleToggleSound = () => {
     if (!audioRef.current) return;
@@ -59,13 +65,24 @@ export default function QuietMindView() {
             Quiet the Mind
           </span>
         </div>
-        <button
-          onClick={handleToggleSound}
-          className="p-2 text-zinc-400 hover:text-white hover:bg-white/5 rounded-full transition-all cursor-pointer"
-          aria-label="Toggle background sound"
-        >
-          {soundEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleToggleSound}
+            className="p-2 text-zinc-400 hover:text-white hover:bg-white/5 rounded-full transition-all cursor-pointer"
+            aria-label="Toggle background sound"
+          >
+            {soundEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
+          </button>
+          <input
+            type="range"
+            min="0"
+            max="1"
+            step="0.05"
+            value={volume}
+            onChange={(e) => setVolume(parseFloat(e.target.value))}
+            className="w-20 h-1 accent-[var(--accent)] cursor-pointer"
+          />
+        </div>
       </div>
 
       {/* Dhikr Content */}

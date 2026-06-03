@@ -20,14 +20,14 @@ export default function BreathworkSession({
   const [secondsLeft, setSecondsLeft] = useState(4);
   const [completedCycles, setCompletedCycles] = useState(0);
   const [soundEnabled, setSoundEnabled] = useState(true);
-
+  const [volume, setVolume] = useState(0.15);
   const bgMusicRef = useRef<HTMLAudioElement | null>(null);
 
   // Initialize background ambient music
   useEffect(() => {
     const audio = new Audio('/new-bg-music.mp3');
     audio.loop = true;
-    audio.volume = 0.15;
+    audio.volume = volume;
     audio.play().then(() => setSoundEnabled(true)).catch(() => setSoundEnabled(false));
     bgMusicRef.current = audio;
     return () => {
@@ -35,6 +35,10 @@ export default function BreathworkSession({
       audio.src = '';
     };
   }, []);
+
+  useEffect(() => {
+    if (bgMusicRef.current) bgMusicRef.current.volume = volume;
+  }, [volume]);
 
   // Breathing loop ticker
   useEffect(() => {
@@ -116,12 +120,12 @@ export default function BreathworkSession({
         <div className="flex items-center gap-3">
           <button
             onClick={() => {
-              setSoundEnabled(!soundEnabled);
               if (soundEnabled) {
                 bgMusicRef.current?.pause();
-              } else if (isPlaying) {
+              } else {
                 bgMusicRef.current?.play().catch(() => {});
               }
+              setSoundEnabled(!soundEnabled);
             }}
             className="p-2 text-zinc-400 hover:text-white hover:bg-white/5 rounded-full transition-all cursor-pointer"
             aria-label="Toggle Sound"
@@ -132,6 +136,15 @@ export default function BreathworkSession({
               <VolumeX className="w-5 h-5" />
             )}
           </button>
+          <input
+            type="range"
+            min="0"
+            max="1"
+            step="0.05"
+            value={volume}
+            onChange={(e) => setVolume(parseFloat(e.target.value))}
+            className="w-16 h-1 accent-[var(--accent)] cursor-pointer"
+          />
           <button
             onClick={onClose}
             className="p-2 text-zinc-400 hover:text-white hover:bg-white/5 rounded-full transition-all cursor-pointer"
