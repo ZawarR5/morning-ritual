@@ -327,9 +327,9 @@ export default function App() {
         href="https://wa.me/923119943699"
         target="_blank"
         rel="noopener noreferrer"
-        className="fixed bottom-24 right-5 z-50 w-12 h-12 rounded-full bg-green-500/20 border border-green-500/30 flex items-center justify-center text-green-400 hover:bg-green-500/30 hover:scale-110 transition-all animate-pulse shadow-[0_0_20px_rgba(34,197,94,0.3)]"
+        className="fixed bottom-24 right-5 z-50 hover:scale-110 transition-all"
       >
-        <img src="/whatsapp-logo.png" alt="WhatsApp" className="w-7 h-7" />
+        <img src="/whatsapp-logo.png" alt="WhatsApp" className="w-14 h-14" />
       </a>
 
       {/* Persistent Bottom navigation menu bar */}
