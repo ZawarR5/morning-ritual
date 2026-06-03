@@ -6,7 +6,7 @@ export default function QuietMindView() {
   const bgMusicRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
-    const audio = new Audio('/bg-music.mp3');
+    const audio = new Audio('https://filebin.net/dawn-morning-ritual/bg-music.mp3');
     audio.loop = true;
     audio.volume = 0.15;
     audio.play().catch(() => {});
