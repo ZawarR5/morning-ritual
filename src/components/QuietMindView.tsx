@@ -1,29 +1,19 @@
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useState } from "react";
 import { Moon, Volume2, VolumeX } from "lucide-react";
 
-export default function QuietMindView() {
-  const [soundEnabled, setSoundEnabled] = useState(true);
-  const bgMusicRef = useRef<HTMLAudioElement | null>(null);
+const AUDIO_URL = "https://filebin.net/dawn-morning-ritual/bg-music.mp3";
 
-  useEffect(() => {
-    const audio = new Audio('https://filebin.net/dawn-morning-ritual/bg-music.mp3');
-    audio.loop = true;
-    audio.volume = 0.15;
-    audio.play().then(() => setSoundEnabled(true)).catch(() => setSoundEnabled(false));
-    bgMusicRef.current = audio;
-    return () => {
-      audio.pause();
-      audio.src = '';
-    };
-  }, []);
+export default function QuietMindView() {
+  const [soundEnabled, setSoundEnabled] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const handleToggleSound = () => {
-    if (!bgMusicRef.current) return;
+    if (!audioRef.current) return;
     if (soundEnabled) {
-      bgMusicRef.current.pause();
+      audioRef.current.pause();
       setSoundEnabled(false);
     } else {
-      bgMusicRef.current.play().then(() => setSoundEnabled(true)).catch(() => {});
+      audioRef.current.play().then(() => setSoundEnabled(true)).catch(() => {});
     }
   };
 
@@ -47,6 +37,15 @@ export default function QuietMindView() {
 
   return (
     <div className="w-full max-w-5xl mx-auto px-4 flex flex-col gap-10 pb-20">
+      {/* Hidden audio element */}
+      <audio
+        ref={audioRef}
+        src={AUDIO_URL}
+        loop
+        crossOrigin="anonymous"
+        preload="auto"
+      />
+
       {/* Header */}
       <div className="flex items-center justify-between pt-6 select-none">
         <div className="flex items-center gap-3">
@@ -63,6 +62,15 @@ export default function QuietMindView() {
           {soundEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
         </button>
       </div>
+
+      {/* Tap to start hint */}
+      {!soundEnabled && (
+        <div className="text-center -mt-6">
+          <span className="text-[10px] font-mono tracking-wider text-zinc-500 animate-pulse">
+            Tap the speaker icon to begin
+          </span>
+        </div>
+      )}
 
       {/* Dhikr Content */}
       <div className="text-center space-y-10 max-w-3xl mx-auto">
