@@ -32,7 +32,7 @@ export default function RitualsView({
 }: RitualsViewProps) {
   const [showPromptConfig, setShowPromptConfig] = useState(false);
 
-  const hours = ["04", "05", "06", "07", "08"];
+  const hours = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"];
   const minutes = ["15", "20", "30", "40", "45"];
 
   return (
