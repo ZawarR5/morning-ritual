@@ -38,6 +38,7 @@ export default function NotesView({ isOpen, onClose }: NotesViewProps) {
   const [editingNote, setEditingNote] = useState<Note | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editContent, setEditContent] = useState("");
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   const persist = (updated: Note[]) => {
     setNotes(updated);
@@ -65,7 +66,14 @@ export default function NotesView({ isOpen, onClose }: NotesViewProps) {
   };
 
   const handleDelete = (id: string) => {
-    persist(notes.filter((n) => n.id !== id));
+    setDeleteConfirmId(id);
+  };
+
+  const confirmDelete = () => {
+    if (deleteConfirmId) {
+      persist(notes.filter((n) => n.id !== deleteConfirmId));
+      setDeleteConfirmId(null);
+    }
   };
 
   const handleSaveEdit = () => {
@@ -219,6 +227,46 @@ export default function NotesView({ isOpen, onClose }: NotesViewProps) {
                 </button>
               </div>
             )}
+
+            {/* Delete confirmation */}
+            <AnimatePresence>
+              {deleteConfirmId && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="absolute inset-0 bg-black/70 flex items-center justify-center p-6 z-10"
+                >
+                  <motion.div
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0.9, opacity: 0 }}
+                    className="bg-[#0b0b0c] border border-white/10 rounded-2xl p-6 w-full max-w-xs text-center space-y-4"
+                  >
+                    <p className="text-sm text-zinc-300 font-sans leading-relaxed">
+                      Delete this note?
+                    </p>
+                    <p className="text-[11px] text-zinc-500 font-sans">
+                      This action cannot be undone.
+                    </p>
+                    <div className="flex gap-3 pt-2">
+                      <button
+                        onClick={() => setDeleteConfirmId(null)}
+                        className="flex-1 py-2.5 text-xs font-mono tracking-wider uppercase text-zinc-400 border border-white/10 rounded-xl hover:bg-white/5 transition-all cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={confirmDelete}
+                        className="flex-1 py-2.5 text-xs font-mono tracking-wider uppercase bg-red-500/20 text-red-400 font-bold rounded-xl border border-red-500/20 hover:bg-red-500/30 transition-all cursor-pointer"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
         </>
       )}
