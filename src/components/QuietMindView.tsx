@@ -9,7 +9,7 @@ export default function QuietMindView() {
     const audio = new Audio('https://filebin.net/dawn-morning-ritual/bg-music.mp3');
     audio.loop = true;
     audio.volume = 0.15;
-    audio.play().catch(() => {});
+    audio.play().then(() => setSoundEnabled(true)).catch(() => setSoundEnabled(false));
     bgMusicRef.current = audio;
     return () => {
       audio.pause();
@@ -18,12 +18,13 @@ export default function QuietMindView() {
   }, []);
 
   const handleToggleSound = () => {
+    if (!bgMusicRef.current) return;
     if (soundEnabled) {
-      bgMusicRef.current?.pause();
+      bgMusicRef.current.pause();
+      setSoundEnabled(false);
     } else {
-      bgMusicRef.current?.play().catch(() => {});
+      bgMusicRef.current.play().then(() => setSoundEnabled(true)).catch(() => {});
     }
-    setSoundEnabled(!soundEnabled);
   };
 
   const dhikrItems = [
