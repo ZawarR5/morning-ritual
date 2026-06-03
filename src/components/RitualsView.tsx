@@ -33,7 +33,7 @@ export default function RitualsView({
   const [showPromptConfig, setShowPromptConfig] = useState(false);
 
   const hours = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"];
-  const minutes = ["15", "20", "30", "40", "45"];
+  const minutes = Array.from({ length: 12 }, (_, i) => String(i * 5).padStart(2, "0"));
 
   return (
     <div className="w-full max-w-5xl mx-auto px-1 flex flex-col gap-8 pb-16">
