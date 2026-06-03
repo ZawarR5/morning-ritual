@@ -98,6 +98,15 @@ export default function App() {
     });
   }, []);
 
+  const playAlarm = useCallback(() => {
+    try {
+      const audio = new Audio("/new-bg-music.mp3");
+      audio.loop = false;
+      audio.volume = 0.5;
+      audio.play();
+    } catch {}
+  }, []);
+
   useEffect(() => {
     const todayKey = new Date().toDateString();
     const sentKey = "mr_notification_sent";
@@ -115,6 +124,7 @@ export default function App() {
           localStorage.setItem(sentKey, todayKey);
           sendBrowserNotification(activeQuote.text, activeQuote.emoji);
           setShowToast(true);
+          playAlarm();
         }
       }
     };
@@ -122,7 +132,7 @@ export default function App() {
     checkTime();
     const interval = setInterval(checkTime, 30000);
     return () => clearInterval(interval);
-  }, [settings.notificationHour, settings.notificationMinute, settings.notificationPeriod, activeQuote, sendBrowserNotification]);
+  }, [settings.notificationHour, settings.notificationMinute, settings.notificationPeriod, activeQuote, sendBrowserNotification, playAlarm]);
 
   // Sync state changes with persistence
   useEffect(() => {

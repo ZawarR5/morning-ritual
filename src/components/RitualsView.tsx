@@ -31,6 +31,9 @@ export default function RitualsView({
   activeMindsetName,
 }: RitualsViewProps) {
   const [showPromptConfig, setShowPromptConfig] = useState(false);
+  const [pendingHour, setPendingHour] = useState(config.notificationHour);
+  const [pendingMinute, setPendingMinute] = useState(config.notificationMinute);
+  const [pendingPeriod, setPendingPeriod] = useState(config.notificationPeriod);
 
   const hours = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"];
   const minutes = Array.from({ length: 12 }, (_, i) => String(i * 5).padStart(2, "0"));
@@ -69,11 +72,11 @@ export default function RitualsView({
             {/* Hour Dial */}
             <div className="flex flex-col items-center gap-0.5 max-h-[130px] overflow-y-auto no-scrollbar scroll-smooth">
               {hours.map((hour) => {
-                const isSelected = config.notificationHour === hour;
+                const isSelected = pendingHour === hour;
                 return (
                   <button
                     key={hour}
-                    onClick={() => onUpdateConfig({ notificationHour: hour })}
+                    onClick={() => setPendingHour(hour)}
                     className={`font-serif text-xl md:text-[36px] py-1 font-medium transition-all cursor-pointer shrink-0 ${
                       isSelected
                         ? "text-[var(--accent)] drop-shadow-[0_0_12px_rgba(var(--accent-rgb),0.35)] scale-110 font-bold"
@@ -92,11 +95,11 @@ export default function RitualsView({
             {/* Minute Dial */}
             <div className="flex flex-col items-center gap-1.5 h-36 overflow-y-auto no-scrollbar scroll-smooth">
               {minutes.map((minute) => {
-                const isSelected = config.notificationMinute === minute;
+                const isSelected = pendingMinute === minute;
                 return (
                   <button
                     key={minute}
-                    onClick={() => onUpdateConfig({ notificationMinute: minute })}
+                    onClick={() => setPendingMinute(minute)}
                     className={`font-serif text-2xl md:text-[38px] py-1.5 font-medium transition-all cursor-pointer ${
                       isSelected
                         ? "text-[var(--accent)] drop-shadow-[0_0_12px_rgba(var(--accent-rgb),0.35)] scale-110 font-bold"
@@ -112,11 +115,11 @@ export default function RitualsView({
             {/* Period selector AM/PM */}
             <div className="flex flex-col gap-2.5">
               {(["AM", "PM"] as const).map((period) => {
-                const isSelected = config.notificationPeriod === period;
+                const isSelected = pendingPeriod === period;
                 return (
                   <button
                     key={period}
-                    onClick={() => onUpdateConfig({ notificationPeriod: period })}
+                    onClick={() => setPendingPeriod(period)}
                     className={`font-mono text-[10px] font-bold uppercase tracking-wider px-3.5 py-1.5 rounded border transition-all cursor-pointer ${
                       isSelected
                         ? "text-[var(--accent)] bg-[var(--accent)]/10 border-[var(--accent)]/25"
@@ -130,12 +133,20 @@ export default function RitualsView({
             </div>
           </div>
 
-          {/* Under dial sunrise notification message */}
-          <div className="mt-6 flex items-center gap-3 p-3.5 rounded-xl bg-[#0b0b0c] border border-white/5 select-none text-xs text-zinc-400">
-            <Sun className="w-4 h-4 text-[var(--accent)]" />
-            <p className="font-sans italic">
-              Scheduled 12 minutes before local sunrise based on your active mindset: <strong className="text-white font-medium text-xs font-serif">{activeMindsetName}</strong>.
-            </p>
+          {/* SET button + Under dial sunrise notification message */}
+          <div className="mt-6 flex items-center gap-3">
+            <button
+              onClick={() => onUpdateConfig({ notificationHour: pendingHour, notificationMinute: pendingMinute, notificationPeriod: pendingPeriod })}
+              className="px-8 py-3 rounded-xl bg-[var(--accent)] text-black font-bold text-sm tracking-widest uppercase hover:opacity-90 transition-all cursor-pointer"
+            >
+              Set
+            </button>
+            <div className="flex items-center gap-3 p-3.5 rounded-xl bg-[#0b0b0c] border border-white/5 select-none text-xs text-zinc-400 flex-1">
+              <Sun className="w-4 h-4 text-[var(--accent)]" />
+              <p className="font-sans italic">
+                Scheduled 12 minutes before local sunrise based on your active mindset: <strong className="text-white font-medium text-xs font-serif">{activeMindsetName}</strong>.
+              </p>
+            </div>
           </div>
         </div>
 
