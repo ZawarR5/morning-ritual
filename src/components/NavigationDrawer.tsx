@@ -1,6 +1,7 @@
 import React, { useState, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { X, User, Flame, BookOpen, Crown, HelpCircle, Camera, Pencil } from "lucide-react";
+import { X, User, Flame, BookOpen, Crown, HelpCircle, Camera, Pencil, StickyNote } from "lucide-react";
+import NotesView from "./NotesView";
 import { UserProfile } from "../types";
 
 interface NavigationDrawerProps {
@@ -29,6 +30,7 @@ export default function NavigationDrawer({
   const [saveStatus, setSaveStatus] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState(profile?.name || "");
+  const [showNotes, setShowNotes] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSave = () => {
@@ -170,6 +172,14 @@ export default function NavigationDrawer({
                 <span className="font-sans text-sm font-medium">Aura Profile</span>
               </div>
 
+              <button
+                onClick={() => setShowNotes(true)}
+                className="flex items-center gap-4 p-3 rounded-xl text-zinc-300 hover:bg-white/5 transition-colors w-full text-left cursor-pointer"
+              >
+                <StickyNote className="w-5 h-5 text-[#D1FF26]" />
+                <span className="font-sans text-sm font-medium">Notes</span>
+              </button>
+
               {/* Streak Tracker */}
               <div className="flex flex-col gap-2 p-3.5 rounded-xl bg-white/5 border border-white/5">
                 <div className="flex items-center justify-between">
@@ -237,6 +247,8 @@ export default function NavigationDrawer({
               </div>
             </div>
           </motion.aside>
+
+          <NotesView isOpen={showNotes} onClose={() => setShowNotes(false)} />
         </>
       )}
     </AnimatePresence>
