@@ -7,13 +7,19 @@
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
 }
 
+:root {
+  --accent: #D1FF26;
+  --accent-rgb: 209, 255, 38;
+  --accent-hover: #e2ff60;
+}
+
 /* Utilities */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
 .no-scrollbar {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 /* Base style resets and customizations */

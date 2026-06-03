@@ -24,7 +24,7 @@ export default function TodayView({
     <div className="w-full flex flex-col items-center gap-12 max-w-5xl mx-auto">
       {/* Hero Quote Section */}
       <section className="w-full text-center flex flex-col items-center gap-4 mt-6 select-none px-4 relative">
-        <div className="absolute top-0 w-16 h-[1px] bg-[#D1FF26]/30"></div>
+        <div className="absolute top-0 w-16 h-[1px] bg-[var(--accent)]/30"></div>
         <span className="text-4xl animate-pulse cursor-default mt-4" role="img" aria-label="sparkles">
           {quoteEmoji || "✨"}
         </span>
@@ -47,7 +47,7 @@ export default function TodayView({
         </div>
 
         {/* Focus Activity Start Session card (7 cols or 8 cols on desktop) */}
-        <div className="md:col-span-7 lg:col-span-8 bg-[#161618]/60 border border-white/10 p-8 rounded-2xl relative overflow-hidden flex flex-col justify-between min-h-[300px] hover:bg-[#161618]/90 hover:border-[#D1FF26]/20 transition-all duration-300 shadow-[0_0_30px_-10px_rgba(209,255,38,0.04)] group">
+        <div className="md:col-span-7 lg:col-span-8 bg-[#161618]/60 border border-white/10 p-8 rounded-2xl relative overflow-hidden flex flex-col justify-between min-h-[300px] hover:bg-[#161618]/90 hover:border-[var(--accent)]/20 transition-all duration-300 shadow-[0_0_30px_-10px_rgba(var(--accent-rgb),0.04)] group">
           {/* Stunning atmospheric background image layer */}
           <div className="absolute right-0 top-0 bottom-0 w-1/2 md:w-3/5 lg:w-1/2 opacity-25 pointer-events-none select-none">
             <div className="absolute inset-0 bg-gradient-to-r from-[#0b0b0c] to-transparent z-10" />
@@ -59,7 +59,7 @@ export default function TodayView({
           </div>
 
           <div className="relative z-10 flex flex-col gap-2.5 max-w-md my-auto select-none">
-            <span className="text-[10px] font-bold text-[#D1FF26] uppercase tracking-[0.2em] font-mono">
+            <span className="text-[10px] font-bold text-[var(--accent)] uppercase tracking-[0.2em] font-mono">
               Next Suggested Ritual
             </span>
             <h3 className="font-serif text-2xl md:text-3xl font-medium text-white tracking-wide">
@@ -70,7 +70,7 @@ export default function TodayView({
             </p>
             <button
               onClick={onStartBreathwork}
-              className="mt-5 bg-[#D1FF26] hover:bg-[#e2ff60] text-zinc-950 font-mono text-[10px] font-bold uppercase tracking-[0.2em] px-8 py-3.5 rounded hover:shadow-[0_0_30px_rgba(209,255,38,0.4)] transition-all active:scale-95 w-fit flex items-center gap-2 cursor-pointer"
+              className="mt-5 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-zinc-950 font-mono text-[10px] font-bold uppercase tracking-[0.2em] px-8 py-3.5 rounded hover:shadow-[0_0_30px_rgba(var(--accent-rgb),0.4)] transition-all active:scale-95 w-fit flex items-center gap-2 cursor-pointer"
             >
               <Play className="w-3.5 h-3.5 fill-zinc-950 stroke-none" />
               <span>Start Session</span>

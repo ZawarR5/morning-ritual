@@ -49,7 +49,7 @@ export default function QuietMindView() {
       {/* Header */}
       <div className="flex items-center justify-between pt-6 select-none">
         <div className="flex items-center gap-3">
-          <Moon className="w-5 h-5 text-[#D1FF26]" />
+          <Moon className="w-5 h-5 text-[var(--accent)]" />
           <span className="font-mono text-xs tracking-[0.2em] uppercase font-bold text-zinc-400">
             Quiet the Mind
           </span>
@@ -67,7 +67,7 @@ export default function QuietMindView() {
       <div className="text-center space-y-10 max-w-3xl mx-auto">
         {/* Title */}
         <div className="space-y-3 select-none">
-          <span className="text-[#D1FF26] font-mono text-xs font-bold tracking-[0.25em] uppercase">
+          <span className="text-[var(--accent)] font-mono text-xs font-bold tracking-[0.25em] uppercase">
             الذكر
           </span>
           <h1 className="font-serif text-5xl md:text-6xl font-light text-white tracking-tight">
@@ -79,14 +79,14 @@ export default function QuietMindView() {
         </div>
 
         {/* Divider */}
-        <div className="w-12 h-[1px] bg-[#D1FF26]/30 mx-auto" />
+        <div className="w-12 h-[1px] bg-[var(--accent)]/30 mx-auto" />
 
         {/* Quran Verse */}
         <div className="bg-white/[0.02] border border-white/10 rounded-2xl p-8 md:p-10 space-y-5">
           <p className="font-serif text-2xl md:text-3xl italic text-[#f0f0f0] leading-[1.4] tracking-tight font-light">
             "Verily, in the remembrance<br className="hidden sm:block" /> of Allah do hearts find rest."
           </p>
-          <p className="font-mono text-[10px] text-[#D1FF26] tracking-[0.25em] uppercase font-bold">
+          <p className="font-mono text-[10px] text-[var(--accent)] tracking-[0.25em] uppercase font-bold">
             — Quran 13:28
           </p>
         </div>
@@ -94,9 +94,9 @@ export default function QuietMindView() {
         {/* Intro Paragraph */}
         <p className="text-sm md:text-[15px] text-zinc-300 leading-[1.8] font-sans max-w-2xl mx-auto">
           There is something profoundly calming about repeating the names of Allah or simple phrases like{" "}
-          <span className="text-[#D1FF26] font-semibold">SubhanAllah</span>,{" "}
-          <span className="text-[#D1FF26] font-semibold">Alhamdulillah</span>, and{" "}
-          <span className="text-[#D1FF26] font-semibold">Allahu Akbar</span>.
+          <span className="text-[var(--accent)] font-semibold">SubhanAllah</span>,{" "}
+          <span className="text-[var(--accent)] font-semibold">Alhamdulillah</span>, and{" "}
+          <span className="text-[var(--accent)] font-semibold">Allahu Akbar</span>.
           When we make dhikr part of our daily life, it helps slow down the rush of thoughts.
           It brings us back to the present moment, reminding us that we are not in control — Allah is.
         </p>
@@ -115,12 +115,12 @@ export default function QuietMindView() {
           {dhikrItems.map((item) => (
             <div
               key={item.transliteration}
-              className="bg-white/[0.02] border border-white/10 rounded-2xl p-6 md:p-7 space-y-4 text-center hover:border-[#D1FF26]/20 hover:bg-white/[0.04] transition-all duration-300 group"
+              className="bg-white/[0.02] border border-white/10 rounded-2xl p-6 md:p-7 space-y-4 text-center hover:border-[var(--accent)]/20 hover:bg-white/[0.04] transition-all duration-300 group"
             >
               <p className="text-2xl md:text-3xl font-serif text-white leading-loose" dir="rtl">
                 {item.arabic}
               </p>
-              <p className="font-mono text-xs text-[#D1FF26] font-bold tracking-wider group-hover:text-white transition-colors">
+              <p className="font-mono text-xs text-[var(--accent)] font-bold tracking-wider group-hover:text-white transition-colors">
                 {item.transliteration}
               </p>
               <p className="text-[11px] text-zinc-400 font-sans leading-relaxed">
@@ -135,7 +135,7 @@ export default function QuietMindView() {
           <p className="text-xl md:text-2xl font-serif text-white leading-loose" dir="rtl">
             حَسْبُنَا ٱللَّٰهُ وَنِعْمَ ٱلْوَكِيلُ
           </p>
-          <p className="font-mono text-xs text-[#D1FF26] font-bold tracking-wider">
+          <p className="font-mono text-xs text-[var(--accent)] font-bold tracking-wider">
             Hasbunallahu wa ni'mal wakeel
           </p>
           <p className="text-sm text-zinc-300 leading-relaxed font-sans">

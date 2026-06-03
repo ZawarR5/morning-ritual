@@ -94,7 +94,7 @@ export default function FourQulView({ onFinish }: FourQulViewProps) {
       key={currentSurahIdx}
       className="fixed inset-0 z-[120] bg-[#0b0b0c] text-[#e5e2e1] flex flex-col"
     >
-      <div className="absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-[#D1FF26]/5 to-transparent pointer-events-none -z-10" />
+      <div className="absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-[var(--accent)]/5 to-transparent pointer-events-none -z-10" />
 
       {/* Header */}
       <div className="flex items-center justify-between px-5 pt-6 pb-2">
@@ -103,7 +103,7 @@ export default function FourQulView({ onFinish }: FourQulViewProps) {
         </span>
         <button
           onClick={handleFinish}
-          className="text-[10px] tracking-widest uppercase font-mono font-bold px-4 py-2 rounded bg-[#D1FF26]/10 hover:bg-[#D1FF26]/20 text-[#D1FF26] border border-[#D1FF26]/15 transition-all cursor-pointer flex items-center gap-1"
+          className="text-[10px] tracking-widest uppercase font-mono font-bold px-4 py-2 rounded bg-[var(--accent)]/10 hover:bg-[var(--accent)]/20 text-[var(--accent)] border border-[var(--accent)]/15 transition-all cursor-pointer flex items-center gap-1"
         >
           <span>Finish</span>
           <ChevronRight className="w-3 h-3" />
@@ -118,7 +118,7 @@ export default function FourQulView({ onFinish }: FourQulViewProps) {
             onClick={() => handleSurahChange(idx)}
             className={`px-3 py-1.5 rounded-full text-xs font-mono font-bold tracking-wider transition-all whitespace-nowrap cursor-pointer ${
               idx === currentSurahIdx
-                ? "bg-[#D1FF26]/15 text-[#D1FF26] border border-[#D1FF26]/30 shadow-[0_0_12px_rgba(209,255,38,0.15)]"
+                ? "bg-[var(--accent)]/15 text-[var(--accent)] border border-[var(--accent)]/30 shadow-[0_0_12px_rgba(var(--accent-rgb),0.15)]"
                 : "text-zinc-500 border border-white/5 hover:text-zinc-300"
             }`}
           >
@@ -154,7 +154,7 @@ export default function FourQulView({ onFinish }: FourQulViewProps) {
                 key={idx}
                 className={`text-2xl sm:text-3xl font-serif leading-relaxed tracking-wide transition-all duration-500 ${
                   idx === currentAyahIdx
-                    ? "text-[#D1FF26] scale-[1.02] [text-shadow:0_0_16px_rgba(209,255,38,0.35)]"
+                    ? "text-[var(--accent)] scale-[1.02] [text-shadow:0_0_16px_rgba(var(--accent-rgb),0.35)]"
                     : idx < currentAyahIdx
                     ? "text-zinc-600"
                     : "text-zinc-300"
@@ -173,7 +173,7 @@ export default function FourQulView({ onFinish }: FourQulViewProps) {
           <>
             <div className="w-full h-1 bg-white/10 rounded-full mb-2 overflow-hidden">
               <div
-                className="h-full bg-[#D1FF26] rounded-full transition-all duration-200"
+                className="h-full bg-[var(--accent)] rounded-full transition-all duration-200"
                 style={{ width: `${(currentTime / duration) * 100}%` }}
               />
             </div>
@@ -189,7 +189,7 @@ export default function FourQulView({ onFinish }: FourQulViewProps) {
             className={`cursor-pointer w-14 h-14 rounded-full flex items-center justify-center transition-all ${
               isPlaying
                 ? "bg-zinc-800 hover:bg-zinc-700 text-white border border-white/10"
-                : "bg-[#D1FF26] text-[#0b0b0c] hover:shadow-[0_0_30px_4px_rgba(209,255,38,0.4)]"
+                : "bg-[var(--accent)] text-[#0b0b0c] hover:shadow-[0_0_30px_4px_rgba(var(--accent-rgb),0.4)]"
             }`}
           >
             {isPlaying ? (

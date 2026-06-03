@@ -1,8 +1,9 @@
 import React, { useState, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { X, User, Flame, BookOpen, Crown, HelpCircle, Camera, Pencil, StickyNote } from "lucide-react";
+import { X, User, Flame, HelpCircle, Camera, Pencil, StickyNote, ChevronDown } from "lucide-react";
 import NotesView from "./NotesView";
 import { UserProfile } from "../types";
+import { moods } from "../themes";
 
 interface NavigationDrawerProps {
   isOpen: boolean;
@@ -11,9 +12,8 @@ interface NavigationDrawerProps {
   onUpdateProfile: (profile: UserProfile) => void;
   streakDays: number;
   onIncrementStreak: () => void;
-  journalText: string;
-  onJournalChange: (text: string) => void;
-  onSaveJournalToWisdom: () => void;
+  mood: string;
+  onMoodChange: (mood: string) => void;
 }
 
 export default function NavigationDrawer({
@@ -23,24 +23,14 @@ export default function NavigationDrawer({
   onUpdateProfile,
   streakDays,
   onIncrementStreak,
-  journalText,
-  onJournalChange,
-  onSaveJournalToWisdom,
+  mood,
+  onMoodChange,
 }: NavigationDrawerProps) {
-  const [saveStatus, setSaveStatus] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState(profile?.name || "");
   const [showNotes, setShowNotes] = useState(false);
+  const [showMoodPicker, setShowMoodPicker] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleSave = () => {
-    if (!journalText.trim()) return;
-    onSaveJournalToWisdom();
-    setSaveStatus("Saved to wisdom archive!");
-    setTimeout(() => {
-      setSaveStatus(null);
-    }, 3000);
-  };
 
   return (
     <AnimatePresence>
@@ -69,7 +59,7 @@ export default function NavigationDrawer({
                 {/* Avatar */}
                 <div
                   onClick={() => fileInputRef.current?.click()}
-                  className="h-16 w-16 rounded-full overflow-hidden border border-[#D1FF26]/40 select-none bg-zinc-900 cursor-pointer group relative"
+                  className="h-16 w-16 rounded-full overflow-hidden border border-[var(--accent)]/40 select-none bg-zinc-900 cursor-pointer group relative"
                 >
                   {profile?.avatar ? (
                     <img
@@ -110,7 +100,7 @@ export default function NavigationDrawer({
                       <input
                         value={editName}
                         onChange={(e) => setEditName(e.target.value)}
-                        className="bg-zinc-800 border border-white/20 rounded px-2 py-1 text-white font-serif text-lg w-36 focus:outline-none focus:border-[#D1FF26]/50"
+                        className="bg-zinc-800 border border-white/20 rounded px-2 py-1 text-white font-serif text-lg w-36 focus:outline-none focus:border-[var(--accent)]/50"
                         maxLength={30}
                         autoFocus
                         onKeyDown={(e) => {
@@ -129,7 +119,7 @@ export default function NavigationDrawer({
                           onUpdateProfile({ ...profile!, name: editName || "Morning Seeker" });
                           setEditing(false);
                         }}
-                        className="text-[#D1FF26] text-xs font-bold cursor-pointer"
+                        className="text-[var(--accent)] text-xs font-bold cursor-pointer"
                       >
                         Save
                       </button>
@@ -144,7 +134,7 @@ export default function NavigationDrawer({
                           setEditName(profile?.name || "");
                           setEditing(true);
                         }}
-                        className="opacity-0 group-hover:opacity-100 transition-all text-zinc-500 hover:text-[#D1FF26] cursor-pointer"
+                        className="opacity-0 group-hover:opacity-100 transition-all text-zinc-500 hover:text-[var(--accent)] cursor-pointer"
                       >
                         <Pencil className="w-3.5 h-3.5" />
                       </button>
@@ -167,16 +157,44 @@ export default function NavigationDrawer({
 
             {/* Navigation links */}
             <nav className="flex flex-col gap-2.5 mb-8">
-              <div className="flex items-center gap-4 p-3 rounded-xl text-zinc-300 bg-white/5 hover:bg-white/10 transition-colors">
-                <User className="w-5 h-5 text-[#D1FF26]" />
+              <div>
+              <div
+                onClick={() => setShowMoodPicker(!showMoodPicker)}
+                className="flex items-center gap-4 p-3 rounded-xl text-zinc-300 bg-white/5 hover:bg-white/10 transition-colors cursor-pointer"
+              >
+                <User className="w-5 h-5 text-[var(--accent)]" />
                 <span className="font-sans text-sm font-medium">Aura Profile</span>
+                <ChevronDown className={`w-4 h-4 ml-auto text-zinc-500 transition-transform ${showMoodPicker ? "rotate-180" : ""}`} />
               </div>
+              {showMoodPicker && (
+                <div className="mt-2 p-3 rounded-xl bg-white/[0.03] border border-white/10 space-y-1.5">
+                  <p className="font-mono text-[10px] uppercase tracking-wider text-zinc-500 font-bold px-1 mb-2">Select Your Mood</p>
+                  {moods.map((m) => (
+                    <button
+                      key={m.id}
+                      onClick={() => { onMoodChange(m.id); setShowMoodPicker(false); }}
+                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left text-sm transition-all cursor-pointer ${
+                        mood === m.id
+                          ? "bg-white/10 text-white font-medium"
+                          : "text-zinc-400 hover:bg-white/5 hover:text-zinc-200"
+                      }`}
+                    >
+                      <span className="text-base">{m.emoji}</span>
+                      <span className="font-sans">{m.label}</span>
+                      {mood === m.id && (
+                        <span className="ml-auto w-2 h-2 rounded-full" style={{ backgroundColor: m.accent }} />
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
 
               <button
                 onClick={() => setShowNotes(true)}
                 className="flex items-center gap-4 p-3 rounded-xl text-zinc-300 hover:bg-white/5 transition-colors w-full text-left cursor-pointer"
               >
-                <StickyNote className="w-5 h-5 text-[#D1FF26]" />
+                <StickyNote className="w-5 h-5 text-[var(--accent)]" />
                 <span className="font-sans text-sm font-medium">Notes</span>
               </button>
 
@@ -184,10 +202,10 @@ export default function NavigationDrawer({
               <div className="flex flex-col gap-2 p-3.5 rounded-xl bg-white/5 border border-white/5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3 text-zinc-300">
-                    <Flame className="w-5 h-5 text-[#D1FF26]" />
+                    <Flame className="w-5 h-5 text-[var(--accent)]" />
                     <span className="font-sans text-sm font-medium">Rise Streak</span>
                   </div>
-                  <span className="text-xs font-bold text-[#D1FF26] tracking-wide font-mono bg-[#D1FF26]/10 px-2.5 py-1 rounded border border-[#D1FF26]/20">
+                  <span className="text-xs font-bold text-[var(--accent)] tracking-wide font-mono bg-[var(--accent)]/10 px-2.5 py-1 rounded border border-[var(--accent)]/20">
                     {streakDays} Days
                   </span>
                 </div>
@@ -196,55 +214,24 @@ export default function NavigationDrawer({
                 </p>
                 <button
                   onClick={onIncrementStreak}
-                  className="mt-2 text-center text-xs font-semibold py-2 rounded bg-[#D1FF26]/10 hover:bg-[#D1FF26]/25 text-[#D1FF26] border border-[#D1FF26]/15 active:scale-95 transition-all cursor-pointer"
+                  className="mt-2 text-center text-xs font-semibold py-2 rounded bg-[var(--accent)]/10 hover:bg-[var(--accent)]/25 text-[var(--accent)] border border-[var(--accent)]/15 active:scale-95 transition-all cursor-pointer"
                 >
                   Log Today's Rise
                 </button>
-              </div>
-
-              {/* Sunrise Journaling Block */}
-              <div className="flex flex-col gap-2 p-3.5 rounded-xl bg-white/5 border border-white/5">
-                <div className="flex items-center gap-3 text-zinc-300">
-                  <BookOpen className="w-5 h-5 text-[#D1FF26]" />
-                  <span className="font-sans text-sm font-medium">Quick Reflections</span>
-                </div>
-                <textarea
-                  value={journalText}
-                  onChange={(e) => onJournalChange(e.target.value)}
-                  placeholder="Express your focus, fears, or goals. This context builds your AI daily manifestation quote..."
-                  rows={3}
-                  className="w-full text-xs text-zinc-200 bg-[#0b0b0c] border border-white/15 hover:border-white/20 focus:border-[#D1FF26] rounded-xl p-2.5 resize-none placeholder-zinc-550 focus:outline-none focus:ring-0 transition-colors"
-                />
-                <button
-                  onClick={handleSave}
-                  disabled={!journalText.trim()}
-                  className={`text-center text-xs font-mono tracking-wider uppercase py-2 rounded transition-all border cursor-pointer ${
-                    journalText.trim()
-                      ? "bg-zinc-800 border-zinc-700 hover:bg-zinc-750 text-[#D1FF26] active:scale-95"
-                      : "bg-zinc-900/50 border-zinc-850 text-zinc-650 cursor-not-allowed"
-                  }`}
-                >
-                  Save to Archive
-                </button>
-                {saveStatus && (
-                  <p className="text-[10px] text-[#D1FF26] mt-1 text-center font-medium animate-pulse">
-                    {saveStatus}
-                  </p>
-                )}
-              </div>
-
-              <div className="flex items-center gap-3 p-3 rounded-xl text-zinc-400 hover:bg-white/5 transition-colors cursor-pointer">
-                <Crown className="w-5 h-5 text-[#D1FF26]" />
-                <span className="font-sans text-sm font-medium">Sacred Membership</span>
               </div>
             </nav>
 
             {/* Bottom Support section */}
             <div className="mt-auto pt-6 border-t border-white/10">
-              <div className="flex items-center gap-3 p-3 rounded-xl text-zinc-400 hover:bg-white/5 transition-colors cursor-pointer">
+              <a
+                href="https://wa.me/923119943699"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 p-3 rounded-xl text-zinc-400 hover:bg-white/5 transition-colors cursor-pointer no-underline"
+              >
                 <HelpCircle className="w-5 h-5" />
                 <span className="font-sans text-sm font-medium">Sanctuary Support</span>
-              </div>
+              </a>
             </div>
           </motion.aside>
 

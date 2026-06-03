@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { X, Plus, Trash2, Edit3, Check, StickyNote, Search } from "lucide-react";
+import { X, Plus, Trash2, Edit3, Check, StickyNote, Search, CheckSquare, Square } from "lucide-react";
 
 interface Note {
   id: string;
@@ -39,7 +39,10 @@ export default function NotesView({ isOpen, onClose }: NotesViewProps) {
   const [editTitle, setEditTitle] = useState("");
   const [editContent, setEditContent] = useState("");
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [batchDeleteConfirm, setBatchDeleteConfirm] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const persist = (updated: Note[]) => {
     setNotes(updated);
@@ -74,6 +77,30 @@ export default function NotesView({ isOpen, onClose }: NotesViewProps) {
     if (deleteConfirmId) {
       persist(notes.filter((n) => n.id !== deleteConfirmId));
       setDeleteConfirmId(null);
+    }
+  };
+
+  const confirmBatchDelete = () => {
+    persist(notes.filter((n) => !selectedIds.has(n.id)));
+    setSelectedIds(new Set());
+    setSelectMode(false);
+    setBatchDeleteConfirm(false);
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filtered.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filtered.map((n) => n.id)));
     }
   };
 
@@ -126,21 +153,55 @@ export default function NotesView({ isOpen, onClose }: NotesViewProps) {
           >
             {/* Header */}
             <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-white/10">
-              <div className="flex items-center gap-3">
-                <StickyNote className="w-5 h-5 text-[#D1FF26]" />
-                <span className="font-mono text-xs tracking-[0.2em] uppercase font-bold text-zinc-400">
-                  Notes
-                </span>
-                <span className="text-[10px] text-zinc-600 font-mono bg-white/5 px-2 py-0.5 rounded">
-                  {notes.length}
-                </span>
+              {selectMode ? (
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={toggleSelectAll}
+                    className="text-zinc-400 hover:text-[var(--accent)] transition-colors cursor-pointer"
+                  >
+                    {selectedIds.size === filtered.length && filtered.length > 0
+                      ? <CheckSquare className="w-5 h-5" />
+                      : <Square className="w-5 h-5" />}
+                  </button>
+                  <span className="font-mono text-xs tracking-[0.2em] uppercase font-bold text-zinc-300">
+                    {selectedIds.size} selected
+                  </span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-3">
+                  <StickyNote className="w-5 h-5 text-[var(--accent)]" />
+                  <span className="font-mono text-xs tracking-[0.2em] uppercase font-bold text-zinc-400">
+                    Notes
+                  </span>
+                  <span className="text-[10px] text-zinc-600 font-mono bg-white/5 px-2 py-0.5 rounded">
+                    {notes.length}
+                  </span>
+                </div>
+              )}
+              <div className="flex items-center gap-2">
+                {!selectMode && !editingNote && notes.length > 0 && (
+                  <button
+                    onClick={() => setSelectMode(true)}
+                    className="text-[10px] font-mono tracking-wider uppercase text-zinc-400 hover:text-[var(--accent)] px-2 py-1 rounded hover:bg-white/5 transition-all cursor-pointer"
+                  >
+                    Select
+                  </button>
+                )}
+                {selectMode && (
+                  <button
+                    onClick={() => { setSelectMode(false); setSelectedIds(new Set()); }}
+                    className="text-[10px] font-mono tracking-wider uppercase text-zinc-400 hover:text-white px-2 py-1 rounded hover:bg-white/5 transition-all cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                )}
+                <button
+                  onClick={onClose}
+                  className="p-1.5 text-zinc-400 hover:text-white hover:bg-white/5 rounded-lg transition-all cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
-              <button
-                onClick={onClose}
-                className="p-1.5 text-zinc-400 hover:text-white hover:bg-white/5 rounded-lg transition-all cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
             </div>
 
             {/* Editing mode */}
@@ -150,14 +211,14 @@ export default function NotesView({ isOpen, onClose }: NotesViewProps) {
                   value={editTitle}
                   onChange={(e) => setEditTitle(e.target.value)}
                   placeholder="Note title..."
-                  className="w-full bg-transparent border-b border-white/10 pb-3 text-xl font-serif text-white placeholder-zinc-600 focus:outline-none focus:border-[#D1FF26]/50 transition-colors"
+                  className="w-full bg-transparent border-b border-white/10 pb-3 text-xl font-serif text-white placeholder-zinc-600 focus:outline-none focus:border-[var(--accent)]/50 transition-colors"
                   autoFocus
                 />
                 <textarea
                   value={editContent}
                   onChange={(e) => setEditContent(e.target.value)}
                   placeholder="Write your note..."
-                  className="flex-1 w-full bg-white/[0.02] border border-white/10 rounded-xl p-4 text-sm text-zinc-200 placeholder-zinc-600 resize-none focus:outline-none focus:border-[#D1FF26]/50 transition-colors font-sans leading-relaxed"
+                  className="flex-1 w-full bg-white/[0.02] border border-white/10 rounded-xl p-4 text-sm text-zinc-200 placeholder-zinc-600 resize-none focus:outline-none focus:border-[var(--accent)]/50 transition-colors font-sans leading-relaxed"
                 />
                 <div className="flex gap-3">
                   <button
@@ -168,7 +229,7 @@ export default function NotesView({ isOpen, onClose }: NotesViewProps) {
                   </button>
                   <button
                     onClick={handleSaveEdit}
-                    className="flex-1 py-3 text-xs font-mono tracking-wider uppercase bg-[#D1FF26] text-[#0b0b0c] font-bold rounded-xl hover:shadow-[0_0_20px_rgba(209,255,38,0.3)] transition-all cursor-pointer flex items-center justify-center gap-2"
+                    className="flex-1 py-3 text-xs font-mono tracking-wider uppercase bg-[var(--accent)] text-[#0b0b0c] font-bold rounded-xl hover:shadow-[0_0_20px_rgba(var(--accent-rgb),0.3)] transition-all cursor-pointer flex items-center justify-center gap-2"
                   >
                     <Check className="w-4 h-4" />
                     Save
@@ -185,7 +246,7 @@ export default function NotesView({ isOpen, onClose }: NotesViewProps) {
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       placeholder="Search notes..."
-                      className="w-full bg-white/[0.03] border border-white/10 rounded-xl py-2.5 pl-9 pr-3 text-xs text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-[#D1FF26]/50 transition-colors"
+                      className="w-full bg-white/[0.03] border border-white/10 rounded-xl py-2.5 pl-9 pr-3 text-xs text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-[var(--accent)]/50 transition-colors"
                     />
                   </div>
                 </div>
@@ -205,9 +266,26 @@ export default function NotesView({ isOpen, onClose }: NotesViewProps) {
                     filtered.map((note) => (
                     <div
                       key={note.id}
-                      className="bg-white/[0.02] border border-white/10 rounded-xl p-4 hover:bg-white/[0.04] hover:border-[#D1FF26]/20 transition-all group cursor-pointer"
+                      onClick={() => selectMode ? toggleSelect(note.id) : handleEdit(note)}
+                      className={`rounded-xl p-4 transition-all cursor-pointer ${
+                        selectMode
+                          ? selectedIds.has(note.id)
+                            ? "bg-[var(--accent)]/10 border border-[var(--accent)]/30"
+                            : "bg-white/[0.02] border border-white/10 hover:bg-white/[0.04]"
+                          : "bg-white/[0.02] border border-white/10 hover:bg-white/[0.04] hover:border-[var(--accent)]/20 group"
+                      }`}
                     >
-                      <div className="flex items-start justify-between gap-3" onClick={() => handleEdit(note)}>
+                      <div className="flex items-start justify-between gap-3">
+                        {selectMode && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); toggleSelect(note.id); }}
+                            className="mt-0.5 text-zinc-500 hover:text-[var(--accent)] transition-colors cursor-pointer shrink-0"
+                          >
+                            {selectedIds.has(note.id)
+                              ? <CheckSquare className="w-5 h-5 text-[var(--accent)]" />
+                              : <Square className="w-5 h-5" />}
+                          </button>
+                        )}
                         <div className="flex-1 min-w-0">
                           <h3 className="font-serif text-base text-white truncate">
                             {note.title || "Untitled"}
@@ -219,20 +297,22 @@ export default function NotesView({ isOpen, onClose }: NotesViewProps) {
                             {formatDate(note.updatedAt)}
                           </p>
                         </div>
-                        <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-all shrink-0">
-                          <button
-                            onClick={(e) => { e.stopPropagation(); handleEdit(note); }}
-                            className="p-1.5 text-zinc-500 hover:text-[#D1FF26] transition-colors cursor-pointer"
-                          >
-                            <Edit3 className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            onClick={(e) => { e.stopPropagation(); handleDelete(note.id); }}
-                            className="p-1.5 text-zinc-500 hover:text-red-400 transition-colors cursor-pointer"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
+                        {!selectMode && (
+                          <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-all shrink-0">
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleEdit(note); }}
+                              className="p-1.5 text-zinc-500 hover:text-[var(--accent)] transition-colors cursor-pointer"
+                            >
+                              <Edit3 className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleDelete(note.id); }}
+                              className="p-1.5 text-zinc-500 hover:text-red-400 transition-colors cursor-pointer"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))
@@ -241,20 +321,35 @@ export default function NotesView({ isOpen, onClose }: NotesViewProps) {
             </>)
             }
 
-            {/* Add button */}
+            {/* Bottom bar */}
             {!editingNote && (
               <div className="p-4 border-t border-white/10">
-                <button
-                  onClick={handleAdd}
-                  className="w-full py-3 text-xs font-mono tracking-wider uppercase bg-[#D1FF26] text-[#0b0b0c] font-bold rounded-xl hover:shadow-[0_0_20px_rgba(209,255,38,0.3)] transition-all cursor-pointer flex items-center justify-center gap-2"
-                >
-                  <Plus className="w-4 h-4" />
-                  Add Note
-                </button>
+                {selectMode ? (
+                  <button
+                    onClick={() => setBatchDeleteConfirm(true)}
+                    disabled={selectedIds.size === 0}
+                    className={`w-full py-3 text-xs font-mono tracking-wider uppercase font-bold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 ${
+                      selectedIds.size > 0
+                        ? "bg-red-500/20 text-red-400 border border-red-500/20 hover:bg-red-500/30"
+                        : "bg-zinc-900/50 text-zinc-700 border border-zinc-800 cursor-not-allowed"
+                    }`}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Delete Selected ({selectedIds.size})
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleAdd}
+                    className="w-full py-3 text-xs font-mono tracking-wider uppercase bg-[var(--accent)] text-[#0b0b0c] font-bold rounded-xl hover:shadow-[0_0_20px_rgba(var(--accent-rgb),0.3)] transition-all cursor-pointer flex items-center justify-center gap-2"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add Note
+                  </button>
+                )}
               </div>
             )}
 
-            {/* Delete confirmation */}
+            {/* Delete confirmation - single */}
             <AnimatePresence>
               {deleteConfirmId && (
                 <motion.div
@@ -287,6 +382,46 @@ export default function NotesView({ isOpen, onClose }: NotesViewProps) {
                         className="flex-1 py-2.5 text-xs font-mono tracking-wider uppercase bg-red-500/20 text-red-400 font-bold rounded-xl border border-red-500/20 hover:bg-red-500/30 transition-all cursor-pointer"
                       >
                         Delete
+                      </button>
+                    </div>
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Batch delete confirmation */}
+            <AnimatePresence>
+              {batchDeleteConfirm && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="absolute inset-0 bg-black/70 flex items-center justify-center p-6 z-10"
+                >
+                  <motion.div
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0.9, opacity: 0 }}
+                    className="bg-[#0b0b0c] border border-white/10 rounded-2xl p-6 w-full max-w-xs text-center space-y-4"
+                  >
+                    <p className="text-sm text-zinc-300 font-sans leading-relaxed">
+                      Delete {selectedIds.size} selected note{selectedIds.size !== 1 ? "s" : ""}?
+                    </p>
+                    <p className="text-[11px] text-zinc-500 font-sans">
+                      This action cannot be undone.
+                    </p>
+                    <div className="flex gap-3 pt-2">
+                      <button
+                        onClick={() => setBatchDeleteConfirm(false)}
+                        className="flex-1 py-2.5 text-xs font-mono tracking-wider uppercase text-zinc-400 border border-white/10 rounded-xl hover:bg-white/5 transition-all cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={confirmBatchDelete}
+                        className="flex-1 py-2.5 text-xs font-mono tracking-wider uppercase bg-red-500/20 text-red-400 font-bold rounded-xl border border-red-500/20 hover:bg-red-500/30 transition-all cursor-pointer"
+                      >
+                        Delete All
                       </button>
                     </div>
                   </motion.div>

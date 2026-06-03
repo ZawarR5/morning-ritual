@@ -28,14 +28,14 @@ export default function BottomNavBar({ activeTab, onTabChange }: BottomNavBarPro
             onClick={() => onTabChange(item.id)}
             className={`flex flex-col items-center justify-center text-xs transition-all cursor-pointer active:scale-95 px-4 py-2 rounded-xl relative ${
               isActive
-                ? "text-[#D1FF26] font-bold"
+                ? "text-[var(--accent)] font-bold"
                 : "text-zinc-500 hover:text-zinc-350"
             }`}
           >
             {isActive && (
               <motion.div
                 layoutId="circle-glow"
-                className="absolute inset-0 bg-[#D1FF26]/5 rounded-xl border border-[#D1FF26]/10 -z-10"
+                className="absolute inset-0 bg-[var(--accent)]/5 rounded-xl border border-[var(--accent)]/10 -z-10"
                 transition={{ type: "spring", stiffness: 300, damping: 30 }}
               />
             )}

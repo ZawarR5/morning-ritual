@@ -32,18 +32,18 @@ export default function NotificationToast({
           transition={{ type: "spring", damping: 25, stiffness: 260 }}
           className="fixed top-20 left-1/2 -translate-x-1/2 z-[200] w-[90%] max-w-md"
         >
-          <div className="bg-[#161618] border border-[#D1FF26]/20 rounded-2xl p-5 shadow-[0_0_40px_rgba(209,255,38,0.1)] backdrop-blur-2xl relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-[#D1FF26] to-transparent" />
+          <div className="bg-[#161618] border border-[var(--accent)]/20 rounded-2xl p-5 shadow-[0_0_40px_rgba(var(--accent-rgb),0.1)] backdrop-blur-2xl relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-[var(--accent)] to-transparent" />
 
             <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-full bg-[#D1FF26]/10 flex items-center justify-center shrink-0 border border-[#D1FF26]/20">
+              <div className="w-12 h-12 rounded-full bg-[var(--accent)]/10 flex items-center justify-center shrink-0 border border-[var(--accent)]/20">
                 <span className="text-2xl">{quoteEmoji}</span>
               </div>
 
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <Sun className="w-3.5 h-3.5 text-[#D1FF26]" />
-                  <span className="font-mono text-[10px] uppercase tracking-widest text-[#D1FF26] font-bold">
+                  <Sun className="w-3.5 h-3.5 text-[var(--accent)]" />
+                  <span className="font-mono text-[10px] uppercase tracking-widest text-[var(--accent)] font-bold">
                     Good Morning
                   </span>
                 </div>
@@ -60,12 +60,12 @@ export default function NotificationToast({
               </button>
             </div>
 
-            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#D1FF26]/5">
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-[var(--accent)]/5">
               <motion.div
                 initial={{ width: "100%" }}
                 animate={{ width: "0%" }}
                 transition={{ duration: 10, ease: "linear" }}
-                className="h-full bg-[#D1FF26]/30"
+                className="h-full bg-[var(--accent)]/30"
               />
             </div>
           </div>

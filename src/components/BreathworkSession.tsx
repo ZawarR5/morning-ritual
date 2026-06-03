@@ -102,12 +102,12 @@ export default function BreathworkSession({
   return (
     <div className="fixed inset-0 z-[120] bg-[#0b0b0c] text-on-surface flex flex-col justify-between p-6">
       {/* Soft atmospheric gradient background matching deep spiritual focus */}
-      <div className="absolute inset-x-0 top-0 h-2/3 bg-gradient-to-b from-[#D1FF26]/5 to-transparent pointer-events-none -z-10" />
+      <div className="absolute inset-x-0 top-0 h-2/3 bg-gradient-to-b from-[var(--accent)]/5 to-transparent pointer-events-none -z-10" />
 
       {/* Header bar */}
       <div className="flex justify-between items-center w-full max-w-xl mx-auto pt-4">
         <div className="flex items-center gap-2">
-          <Wind className="w-5 h-5 text-[#D1FF26] animate-pulse" />
+          <Wind className="w-5 h-5 text-[var(--accent)] animate-pulse" />
           <span className="font-mono text-xs tracking-[0.2em] uppercase font-bold text-zinc-400">
             Guided Sanctuary
           </span>
@@ -144,7 +144,7 @@ export default function BreathworkSession({
       {/* Center Meditation Stage */}
       <div className="flex-1 flex flex-col items-center justify-center max-w-md mx-auto relative">
         {/* Glow behind the breathing sphere */}
-        <div className="absolute w-80 h-80 rounded-full bg-[#D1FF26]/5 blur-[70px] pointer-events-none" />
+        <div className="absolute w-80 h-80 rounded-full bg-[var(--accent)]/5 blur-[70px] pointer-events-none" />
 
         {/* Dynamic Guided Breathing Sphere */}
         <motion.div
@@ -152,9 +152,9 @@ export default function BreathworkSession({
             scale: getCircleScale(),
             boxShadow:
               phase === "Hold"
-                ? "0 0 50px 0px rgba(209, 255, 38, 0.4)"
-                : "0 0 35px -5px rgba(209, 255, 38, 0.25)",
-            borderColor: phase === "Hold" ? "#cebdff" : "#D1FF26",
+                ? "0 0 50px 0px rgba(var(--accent-rgb), 0.4)"
+                : "0 0 35px -5px rgba(var(--accent-rgb), 0.25)",
+            borderColor: phase === "Hold" ? "#cebdff" : "var(--accent)",
           }}
           transition={{ type: "spring", stiffness: 45, damping: 20 }}
           className="w-40 h-40 rounded-full border-2 bg-white/[0.02] flex items-center justify-center relative mb-12 select-none"
@@ -167,7 +167,7 @@ export default function BreathworkSession({
             <span className="block font-serif text-2xl font-semibold text-white tracking-wide">
               {isPlaying ? secondsLeft : "Pause"}
             </span>
-            <span className="block text-[10px] tracking-[0.15em] text-[#D1FF26] uppercase mt-1 font-semibold font-mono">
+            <span className="block text-[10px] tracking-[0.15em] text-[var(--accent)] uppercase mt-1 font-semibold font-mono">
               seconds
             </span>
           </div>
@@ -207,7 +207,7 @@ export default function BreathworkSession({
             className={`cursor-pointer w-14 h-14 rounded-full flex items-center justify-center transition-all ${
               isPlaying
                 ? "bg-zinc-800 hover:bg-zinc-700 text-white border border-white/10"
-                : "bg-[#D1FF26] text-[#0b0b0c] hover:shadow-[0_0_30px_4px_rgba(209,255,38,0.4)]"
+                : "bg-[var(--accent)] text-[#0b0b0c] hover:shadow-[0_0_30px_4px_rgba(var(--accent-rgb),0.4)]"
             }`}
           >
             {isPlaying ? <Pause className="w-6 h-6 fill-white" /> : <Play className="w-6 h-6 fill-[#0b0b0c] stroke-none translate-x-0.5" />}
@@ -223,7 +223,7 @@ export default function BreathworkSession({
           </button>
           <button
             onClick={handleEndSession}
-            className="w-1/2 text-center text-[10px] tracking-widest uppercase font-mono font-bold py-3 rounded bg-[#D1FF26]/10 hover:bg-[#D1FF26]/20 text-[#D1FF26] border border-[#D1FF26]/15 hover:border-[#D1FF26]/30 transition-all cursor-pointer flex items-center justify-center gap-1.5"
+            className="w-1/2 text-center text-[10px] tracking-widest uppercase font-mono font-bold py-3 rounded bg-[var(--accent)]/10 hover:bg-[var(--accent)]/20 text-[var(--accent)] border border-[var(--accent)]/15 hover:border-[var(--accent)]/30 transition-all cursor-pointer flex items-center justify-center gap-1.5"
           >
             <span>Finish Ritual</span>
             <ChevronRight className="w-4 h-4" />

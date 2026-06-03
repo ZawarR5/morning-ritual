@@ -16,6 +16,7 @@ import {
 import FourQulView from "./components/FourQulView";
 import { MindsetId, RitualItem, SettingsConfig, UserProfile } from "./types";
 import OnboardingModal from "./components/OnboardingModal";
+import { getMood } from "./themes";
 
 export default function App() {
   // Navigation states
@@ -66,9 +67,21 @@ export default function App() {
     return saved ? JSON.parse(saved) : null;
   });
 
-  const [journalInput, setJournalInput] = useState("");
+  const [mood, setMood] = useState<string>(() => {
+    return localStorage.getItem("mr_mood") || "peaceful";
+  });
+
   const [isAIGenerating, setIsAIGenerating] = useState(false);
   const [showToast, setShowToast] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem("mr_mood", mood);
+    const theme = getMood(mood);
+    const root = document.documentElement;
+    root.style.setProperty("--accent", theme.accent);
+    root.style.setProperty("--accent-rgb", theme.accentRgb);
+    root.style.setProperty("--accent-hover", theme.hoverBg);
+  }, [mood]);
 
   // Request notification permission and check time every 30s
   useEffect(() => {
@@ -187,7 +200,7 @@ export default function App() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          notes: settings.manifestationPrompt || journalInput || "",
+          notes: settings.manifestationPrompt || "",
           mindset: activeMindset.title,
         }),
       });
@@ -214,12 +227,6 @@ export default function App() {
 
   const handleIncrementStreak = () => {
     setStreakDays((prev) => prev + 1);
-  };
-
-  const handleSaveJournalReflection = () => {
-    if (!journalInput.trim()) return;
-    setSettings((prev) => ({ ...prev, manifestationPrompt: journalInput }));
-    setJournalInput("");
   };
 
   // Find info about selected active mindset
@@ -249,9 +256,8 @@ export default function App() {
         onUpdateProfile={setProfile}
         streakDays={streakDays}
         onIncrementStreak={handleIncrementStreak}
-        journalText={journalInput}
-        onJournalChange={setJournalInput}
-        onSaveJournalToWisdom={handleSaveJournalReflection}
+        mood={mood}
+        onMoodChange={setMood}
       />
 
       {/* Morning notification toast */}

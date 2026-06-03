@@ -44,7 +44,7 @@ export default function ArchiveView({
     <div className="w-full max-w-5xl mx-auto px-1 flex flex-col gap-8 pb-16">
       {/* Header and intro */}
       <section className="text-center md:text-left space-y-3 select-none">
-        <span className="text-[#D1FF26] font-mono text-xs font-bold tracking-[0.25em] uppercase">
+        <span className="text-[var(--accent)] font-mono text-xs font-bold tracking-[0.25em] uppercase">
           Ethereal Repository
         </span>
         <h2 className="font-serif text-3xl md:text-4xl font-normal text-white leading-tight">
@@ -71,7 +71,7 @@ export default function ArchiveView({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search past wisdom thoughts..."
-              className="w-full bg-[#161618] hover:bg-[#1a1a1c] border border-white/10 rounded-xl py-3.5 pl-12 pr-4 focus:outline-none focus:border-[#D1FF26] focus:ring-0 transition-colors font-sans text-xs text-zinc-200 placeholder-zinc-500"
+              className="w-full bg-[#161618] hover:bg-[#1a1a1c] border border-white/10 rounded-xl py-3.5 pl-12 pr-4 focus:outline-none focus:border-[var(--accent)] focus:ring-0 transition-colors font-sans text-xs text-zinc-200 placeholder-zinc-500"
             />
           </div>
           <div className="flex gap-2 overflow-x-auto pb-1 no-scrollbar select-none">
@@ -83,7 +83,7 @@ export default function ArchiveView({
                   onClick={() => setActiveCategory(cat)}
                   className={`px-5 py-2 rounded font-sans text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap active:scale-95 ${
                     isActive
-                      ? "bg-[#D1FF26] text-[#0b0b0c]"
+                      ? "bg-[var(--accent)] text-[#0b0b0c]"
                       : "bg-white/5 border border-white/5 hover:bg-white/10 text-zinc-400 hover:text-zinc-250"
                   }`}
                 >
@@ -98,7 +98,7 @@ export default function ArchiveView({
         <div className="flex justify-end select-none">
           <button
             onClick={() => setShowAddForm(!showAddForm)}
-            className="flex items-center gap-2 text-[10px] font-bold font-mono uppercase tracking-wider text-[#D1FF26] bg-[#D1FF26]/5 hover:bg-[#D1FF26]/10 border border-[#D1FF26]/15 px-4 py-2.5 rounded cursor-pointer active:scale-95 transition-all"
+            className="flex items-center gap-2 text-[10px] font-bold font-mono uppercase tracking-wider text-[var(--accent)] bg-[var(--accent)]/5 hover:bg-[var(--accent)]/10 border border-[var(--accent)]/15 px-4 py-2.5 rounded cursor-pointer active:scale-95 transition-all"
           >
             <Plus className="w-4 h-4" />
             <span>Record Personal Reflection</span>
@@ -121,7 +121,7 @@ export default function ArchiveView({
                 placeholder="Write your morning insight, inspiration, or quote..."
                 required
                 rows={2}
-                className="w-full text-xs text-zinc-200 bg-[#0b0b0c] border border-white/15 focus:border-[#D1FF26] rounded-xl p-3 resize-none focus:outline-none focus:ring-0 transition-colors"
+                className="w-full text-xs text-zinc-200 bg-[#0b0b0c] border border-white/15 focus:border-[var(--accent)] rounded-xl p-3 resize-none focus:outline-none focus:ring-0 transition-colors"
               />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -137,7 +137,7 @@ export default function ArchiveView({
                       onClick={() => setNewCategory(category)}
                       className={`flex-1 py-1.5 rounded-lg border text-xs font-semibold cursor-pointer transition-all ${
                         newCategory === category
-                          ? "bg-[#161618] border-[#D1FF26]/40 text-[#D1FF26]"
+                          ? "bg-[#161618] border-[var(--accent)]/40 text-[var(--accent)]"
                           : "bg-[#0b0b0c] border-white/5 text-zinc-500 hover:text-zinc-300"
                       }`}
                     >
@@ -158,7 +158,7 @@ export default function ArchiveView({
                       onClick={() => setNewEmoji(emoji)}
                       className={`text-lg p-1.5 rounded-lg border cursor-pointer transition-all ${
                         newEmoji === emoji
-                          ? "bg-zinc-800 border-[#D1FF26]/40"
+                          ? "bg-zinc-800 border-[var(--accent)]/40"
                           : "hover:bg-zinc-900 border-transparent"
                       }`}
                     >
@@ -178,7 +178,7 @@ export default function ArchiveView({
               </button>
               <button
                 type="submit"
-                className="px-5 py-2 rounded bg-[#D1FF26] hover:bg-[#e2ff60] text-zinc-950 text-xs font-bold font-sans uppercase tracking-wider transition-all active:scale-95 cursor-pointer"
+                className="px-5 py-2 rounded bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-zinc-950 text-xs font-bold font-sans uppercase tracking-wider transition-all active:scale-95 cursor-pointer"
               >
                 Log Insight
               </button>
@@ -216,11 +216,11 @@ export default function ArchiveView({
                     <div className="flex items-center gap-3">
                       <button
                         onClick={() => onToggleBookmark(item.id)}
-                        className="text-white hover:text-[#D1FF26] transition-colors cursor-pointer"
+                        className="text-white hover:text-[var(--accent)] transition-colors cursor-pointer"
                         aria-label="Bookmark quote"
                       >
                         {item.bookmarked ? (
-                          <BookmarkCheck className="w-4.5 h-4.5 text-[#D1FF26]" />
+                          <BookmarkCheck className="w-4.5 h-4.5 text-[var(--accent)]" />
                         ) : (
                           <Bookmark className="w-4.5 h-4.5" />
                         )}
@@ -230,7 +230,7 @@ export default function ArchiveView({
                           const clipboardText = `"${item.text}" - Recorded in Morning Ritual archive, ${item.date}`;
                           navigator.clipboard.writeText(clipboardText);
                         }}
-                        className="text-white hover:text-[#D1FF26] transition-colors cursor-pointer"
+                        className="text-white hover:text-[var(--accent)] transition-colors cursor-pointer"
                         title="Copy to clipboard"
                       >
                         <Share2 className="w-4.5 h-4.5" />
@@ -249,7 +249,7 @@ export default function ArchiveView({
             ? "text-[#cebdff] bg-[#cebdff]/10 border-[#cebdff]/20 font-mono text-[9px] uppercase"
             : isSteady
             ? "text-[#b5d6c5] bg-[#b5d6c5]/10 border-[#b5d6c5]/20 font-mono text-[9px] uppercase"
-            : "text-[#D1FF26] bg-[#D1FF26]/10 border-[#D1FF26]/20 font-mono text-[9px] uppercase";
+            : "text-[var(--accent)] bg-[var(--accent)]/10 border-[var(--accent)]/20 font-mono text-[9px] uppercase";
 
           // Set columns-2 spanning for Card 1 (Large Feature) to align with screenshot
           const isFirstCard = index === 0;
@@ -257,7 +257,7 @@ export default function ArchiveView({
           return (
             <div
               key={item.id}
-              className={`bg-[#161618]/60 border border-white/10 p-7 rounded-2xl flex flex-col justify-between min-h-[280px] hover:bg-[#161618]/90 hover:border-[#D1FF26]/20 transition-all duration-350 group shadow-lg ${
+              className={`bg-[#161618]/60 border border-white/10 p-7 rounded-2xl flex flex-col justify-between min-h-[280px] hover:bg-[#161618]/90 hover:border-[var(--accent)]/20 transition-all duration-350 group shadow-lg ${
                 isFirstCard ? "lg:col-span-2" : ""
               }`}
             >
@@ -284,9 +284,9 @@ export default function ArchiveView({
                     aria-label="Bookmark session quote"
                   >
                     {item.bookmarked ? (
-                      <BookmarkCheck className="w-4.5 h-4.5 text-[#D1FF26]" />
+                      <BookmarkCheck className="w-4.5 h-4.5 text-[var(--accent)]" />
                     ) : (
-                      <Bookmark className="w-4.5 h-4.5 group-hover:text-[#D1FF26] transition-colors" />
+                      <Bookmark className="w-4.5 h-4.5 group-hover:text-[var(--accent)] transition-colors" />
                     )}
                   </button>
                   <button
@@ -294,7 +294,7 @@ export default function ArchiveView({
                       const clipboardText = `"${item.text}" - Recorded in Morning Ritual archive, ${item.date}`;
                       navigator.clipboard.writeText(clipboardText);
                     }}
-                    className="text-zinc-400 hover:text-[#D1FF26] transition-colors cursor-pointer"
+                    className="text-zinc-400 hover:text-[var(--accent)] transition-colors cursor-pointer"
                     title="Copy insight"
                   >
                     <Share2 className="w-4.5 h-4.5" />

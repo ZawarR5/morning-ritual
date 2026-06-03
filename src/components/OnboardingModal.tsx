@@ -30,13 +30,13 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
 
   return (
     <div className="fixed inset-0 z-[200] bg-[#050505] flex items-center justify-center p-6">
-      <div className="absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-[#D1FF26]/5 to-transparent pointer-events-none" />
+      <div className="absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-[var(--accent)]/5 to-transparent pointer-events-none" />
 
       <div className="w-full max-w-md mx-auto text-center space-y-8 relative">
         {/* Icon */}
         <div className="flex justify-center">
-          <div className="w-16 h-16 rounded-full bg-[#D1FF26]/10 border border-[#D1FF26]/20 flex items-center justify-center">
-            <Moon className="w-8 h-8 text-[#D1FF26]" />
+          <div className="w-16 h-16 rounded-full bg-[var(--accent)]/10 border border-[var(--accent)]/20 flex items-center justify-center">
+            <Moon className="w-8 h-8 text-[var(--accent)]" />
           </div>
         </div>
 
@@ -54,7 +54,7 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
         <div className="flex flex-col items-center gap-4">
           <div
             onClick={() => fileInputRef.current?.click()}
-            className="w-24 h-24 rounded-full border-2 border-dashed border-white/20 hover:border-[#D1FF26]/40 transition-all cursor-pointer flex items-center justify-center overflow-hidden bg-zinc-900/50 group"
+            className="w-24 h-24 rounded-full border-2 border-dashed border-white/20 hover:border-[var(--accent)]/40 transition-all cursor-pointer flex items-center justify-center overflow-hidden bg-zinc-900/50 group"
           >
             {avatar ? (
               <img src={avatar} alt="Preview" className="w-full h-full object-cover" />
@@ -82,7 +82,7 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
             onChange={(e) => setName(e.target.value)}
             placeholder="Your name"
             maxLength={30}
-            className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-5 py-3.5 text-center text-white text-lg font-serif placeholder-zinc-600 focus:outline-none focus:border-[#D1FF26]/50 transition-colors"
+            className="w-full bg-white/[0.03] border border-white/10 rounded-xl px-5 py-3.5 text-center text-white text-lg font-serif placeholder-zinc-600 focus:outline-none focus:border-[var(--accent)]/50 transition-colors"
           />
           <p className="text-[10px] text-zinc-500 font-mono tracking-wider">
             What shall we call you?
@@ -93,7 +93,7 @@ export default function OnboardingModal({ onComplete }: OnboardingModalProps) {
         <div className="space-y-3 pt-4">
           <button
             onClick={handleSubmit}
-            className="w-full bg-[#D1FF26] text-[#0b0b0c] font-mono text-xs font-bold uppercase tracking-wider py-4 rounded-xl hover:shadow-[0_0_30px_rgba(209,255,38,0.3)] transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-2"
+            className="w-full bg-[var(--accent)] text-[#0b0b0c] font-mono text-xs font-bold uppercase tracking-wider py-4 rounded-xl hover:shadow-[0_0_30px_rgba(var(--accent-rgb),0.3)] transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-2"
           >
             <Check className="w-4 h-4" />
             Begin Your Ritual
