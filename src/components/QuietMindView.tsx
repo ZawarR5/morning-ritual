@@ -1,7 +1,7 @@
 import React, { useRef, useState } from "react";
 import { Moon, Volume2, VolumeX } from "lucide-react";
 
-const AUDIO_URL = "https://filebin.net/dawn-morning-ritual/bg-music.mp3";
+const AUDIO_URL = "/new-bg-music.mp3";
 
 export default function QuietMindView() {
   const [soundEnabled, setSoundEnabled] = useState(false);
