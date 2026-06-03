@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { X, Plus, Trash2, Edit3, Check, StickyNote } from "lucide-react";
+import { X, Plus, Trash2, Edit3, Check, StickyNote, Search } from "lucide-react";
 
 interface Note {
   id: string;
@@ -39,6 +39,7 @@ export default function NotesView({ isOpen, onClose }: NotesViewProps) {
   const [editTitle, setEditTitle] = useState("");
   const [editContent, setEditContent] = useState("");
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const persist = (updated: Note[]) => {
     setNotes(updated);
@@ -91,9 +92,18 @@ export default function NotesView({ isOpen, onClose }: NotesViewProps) {
     setEditingNote(null);
   };
 
-  const sorted = [...notes].sort(
-    (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-  );
+  const filtered = [...notes]
+    .filter((n) => {
+      if (!searchQuery.trim()) return true;
+      const q = searchQuery.toLowerCase();
+      return (
+        n.title.toLowerCase().includes(q) ||
+        n.content.toLowerCase().includes(q)
+      );
+    })
+    .sort(
+      (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+    );
 
   return (
     <AnimatePresence>
@@ -166,18 +176,33 @@ export default function NotesView({ isOpen, onClose }: NotesViewProps) {
                 </div>
               </div>
             ) : (
-              /* Notes list */
-              <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                {sorted.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-full text-center select-none">
-                    <StickyNote className="w-10 h-10 text-zinc-700 mb-4" />
-                    <p className="text-sm text-zinc-500 font-sans">No notes yet</p>
-                    <p className="text-[11px] text-zinc-600 font-sans mt-1">
-                      Tap + to create your first note
-                    </p>
+              <>
+                {/* Search bar */}
+                <div className="px-4 pt-3 pb-1">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 w-4 h-4" />
+                    <input
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Search notes..."
+                      className="w-full bg-white/[0.03] border border-white/10 rounded-xl py-2.5 pl-9 pr-3 text-xs text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-[#D1FF26]/50 transition-colors"
+                    />
                   </div>
-                ) : (
-                  sorted.map((note) => (
+                </div>
+                {/* Notes list */}
+                <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                  {filtered.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center h-full text-center select-none">
+                      <StickyNote className="w-10 h-10 text-zinc-700 mb-4" />
+                      <p className="text-sm text-zinc-500 font-sans">
+                        {searchQuery ? "No matching notes" : "No notes yet"}
+                      </p>
+                      <p className="text-[11px] text-zinc-600 font-sans mt-1">
+                        {searchQuery ? "Try a different search" : "Tap + to create your first note"}
+                      </p>
+                    </div>
+                  ) : (
+                    filtered.map((note) => (
                     <div
                       key={note.id}
                       className="bg-white/[0.02] border border-white/10 rounded-xl p-4 hover:bg-white/[0.04] hover:border-[#D1FF26]/20 transition-all group cursor-pointer"
@@ -213,7 +238,8 @@ export default function NotesView({ isOpen, onClose }: NotesViewProps) {
                   ))
                 )}
               </div>
-            )}
+            </>)
+            }
 
             {/* Add button */}
             {!editingNote && (
