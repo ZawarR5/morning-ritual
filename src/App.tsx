@@ -18,6 +18,7 @@ import { MindsetId, RitualItem, SettingsConfig, UserProfile } from "./types";
 import OnboardingModal from "./components/OnboardingModal";
 import { MessageCircle } from "lucide-react";
 import { getMood } from "./themes";
+import { getQuoteForMindset } from "./quotes";
 
 export default function App() {
   // Navigation states
@@ -46,16 +47,13 @@ export default function App() {
     return saved ? JSON.parse(saved) : DEFAULT_SETTINGS;
   });
 
-  // Hot-loaded Hero Quote (curated locally or by AI model)
+  // Hot-loaded Hero Quote — fresh each time the app opens
   const [activeQuote, setActiveQuote] = useState(() => {
-    const savedText = localStorage.getItem("mr_active_quote_text");
-    const savedCategory = localStorage.getItem("mr_active_quote_category") || "Serene";
-    const savedEmoji = localStorage.getItem("mr_active_quote_emoji") || "✨";
-    return {
-      text: savedText || "The sun rises not just for the world, but for the greatness within you.",
-      category: savedCategory,
-      emoji: savedEmoji,
-    };
+    const savedMindsetId = (localStorage.getItem("mr_active_mindset_id") || "calm") as MindsetId;
+    const savedMindsets = localStorage.getItem("mr_mindsets");
+    const mindsets = savedMindsets ? JSON.parse(savedMindsets) : DEFAULT_MINDSETS;
+    const activeMindset = mindsets.find((m: any) => m.id === savedMindsetId) || mindsets[0];
+    return getQuoteForMindset(activeMindset?.title);
   });
 
   const [streakDays, setStreakDays] = useState(() => {

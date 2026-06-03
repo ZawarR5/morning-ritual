@@ -232,6 +232,9 @@ export function getQuoteForMindset(mindset?: string): Quote {
     category = "Serene";
   }
   const pool = QUOTES.filter((q) => q.category === category);
-  const dayIndex = Math.floor(Date.now() / 86400000);
-  return pool[dayIndex % pool.length];
+  const key = "mr_quote_index";
+  let index = parseInt(localStorage.getItem(key) || "0", 10);
+  const quote = pool[index % pool.length];
+  localStorage.setItem(key, String((index + 1) % pool.length));
+  return quote;
 }
