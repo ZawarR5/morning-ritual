@@ -16,7 +16,6 @@ import {
 import FourQulView from "./components/FourQulView";
 import { MindsetId, RitualItem, SettingsConfig, UserProfile } from "./types";
 import OnboardingModal from "./components/OnboardingModal";
-import { MessageCircle } from "lucide-react";
 import { getMood } from "./themes";
 import { getQuoteForMindset } from "./quotes";
 
@@ -100,7 +99,7 @@ export default function App() {
 
   const playAlarm = useCallback(() => {
     try {
-      const audio = new Audio("/new-bg-music.mp3");
+      const audio = new Audio("/alarm-sound.mp3");
       audio.loop = false;
       audio.volume = 0.5;
       audio.play();
@@ -330,7 +329,7 @@ export default function App() {
         rel="noopener noreferrer"
         className="fixed bottom-24 right-5 z-50 w-12 h-12 rounded-full bg-green-500/20 border border-green-500/30 flex items-center justify-center text-green-400 hover:bg-green-500/30 hover:scale-110 transition-all animate-pulse shadow-[0_0_20px_rgba(34,197,94,0.3)]"
       >
-        <MessageCircle className="w-6 h-6" />
+        <img src="/whatsapp-logo.png" alt="WhatsApp" className="w-7 h-7" />
       </a>
 
       {/* Persistent Bottom navigation menu bar */}

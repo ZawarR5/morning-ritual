@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { SettingsConfig, MindsetCategory } from "../types";
 import { 
   Bell, 
@@ -37,6 +37,22 @@ export default function RitualsView({
 
   const hours = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"];
   const minutes = Array.from({ length: 12 }, (_, i) => String(i * 5).padStart(2, "0"));
+  const hourRef = useRef<HTMLDivElement>(null);
+  const minuteRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = hourRef.current;
+    if (!el) return;
+    const selected = el.children[hours.indexOf(pendingHour)] as HTMLElement;
+    if (selected) selected.scrollIntoView({ block: "center", behavior: "smooth" });
+  }, [pendingHour]);
+
+  useEffect(() => {
+    const el = minuteRef.current;
+    if (!el) return;
+    const selected = el.children[minutes.indexOf(pendingMinute)] as HTMLElement;
+    if (selected) selected.scrollIntoView({ block: "center", behavior: "smooth" });
+  }, [pendingMinute]);
 
   return (
     <div className="w-full max-w-5xl mx-auto px-1 flex flex-col gap-8 pb-16">
@@ -70,7 +86,7 @@ export default function RitualsView({
           {/* Time Picker dials */}
           <div className="flex items-center justify-center gap-6 md:gap-10 py-8 relative overflow-hidden select-none">
             {/* Hour Dial */}
-            <div className="flex flex-col items-center gap-0.5 max-h-[130px] overflow-y-auto no-scrollbar scroll-smooth">
+            <div ref={hourRef} className="flex flex-col items-center gap-0.5 max-h-[130px] overflow-y-auto no-scrollbar scroll-smooth">
               {hours.map((hour) => {
                 const isSelected = pendingHour === hour;
                 return (
@@ -93,7 +109,7 @@ export default function RitualsView({
             <div className="font-serif text-2xl md:text-[38px] text-[var(--accent)] pb-2">:</div>
 
             {/* Minute Dial */}
-            <div className="flex flex-col items-center gap-1.5 h-36 overflow-y-auto no-scrollbar scroll-smooth">
+            <div ref={minuteRef} className="flex flex-col items-center gap-1.5 h-36 overflow-y-auto no-scrollbar scroll-smooth">
               {minutes.map((minute) => {
                 const isSelected = pendingMinute === minute;
                 return (
