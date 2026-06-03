@@ -3,7 +3,7 @@ import Header from "./components/Header";
 import NavigationDrawer from "./components/NavigationDrawer";
 import BottomNavBar, { TabId } from "./components/BottomNavBar";
 import TodayView from "./components/TodayView";
-import RitualsView from "./components/RitualsView";
+import PrayerTrackerView from "./components/RitualsView";
 import BreathworkSession from "./components/BreathworkSession";
 import NotificationToast from "./components/NotificationToast";
 import QuietMindView from "./components/QuietMindView";
@@ -315,13 +315,7 @@ export default function App() {
         )}
 
         {activeTab === "rituals" && (
-          <RitualsView
-            config={settings}
-            onUpdateConfig={handleUpdateSettings}
-            onGenerateAIPrompt={handleGenerateAIManifestation}
-            isGenerating={isAIGenerating}
-            activeMindsetName={activeMindset.title}
-          />
+          <PrayerTrackerView />
         )}
 
         {activeTab === "quiet" && (

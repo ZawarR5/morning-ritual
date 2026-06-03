@@ -12,7 +12,7 @@ interface BottomNavBarProps {
 export default function BottomNavBar({ activeTab, onTabChange }: BottomNavBarProps) {
   const navItems = [
     { id: "today" as TabId, label: "Today", icon: Sunrise },
-    { id: "rituals" as TabId, label: "Rituals", icon: Bell },
+    { id: "rituals" as TabId, label: "Prayer", icon: Bell },
     { id: "quiet" as TabId, label: "Quiet Mind", icon: Moon },
     { id: "4kul" as TabId, label: "4 Kul", icon: BookMarked },
   ];
