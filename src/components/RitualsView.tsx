@@ -38,49 +38,24 @@ export default function RitualsView({
 
   const hourValues = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"];
   const minuteValues = Array.from({ length: 60 }, (_, i) => String(i).padStart(2, "0"));
-  const loopedHours = [...hourValues, ...hourValues, ...hourValues];
-  const loopedMins = [...minuteValues, ...minuteValues, ...minuteValues];
   const hourRef = useRef<HTMLDivElement>(null);
   const minuteRef = useRef<HTMLDivElement>(null);
-  const HOUR_OFFSET = hourValues.length;
-  const MIN_OFFSET = minuteValues.length;
 
-  const scrollToHour = (hour: string, behavior: ScrollBehavior = "smooth") => {
+  useEffect(() => {
     const el = hourRef.current;
     if (!el) return;
-    const idx = hourValues.indexOf(hour);
+    const idx = hourValues.indexOf(pendingHour);
     if (idx === -1) return;
-    const target = el.children[HOUR_OFFSET + idx] as HTMLElement;
-    if (target) target.scrollIntoView({ block: "center", behavior });
-  };
+    (el.children[idx] as HTMLElement)?.scrollIntoView({ block: "center" });
+  }, []);
 
-  const scrollToMinute = (min: string, behavior: ScrollBehavior = "smooth") => {
+  useEffect(() => {
     const el = minuteRef.current;
     if (!el) return;
-    const idx = minuteValues.indexOf(min);
+    const idx = minuteValues.indexOf(pendingMinute);
     if (idx === -1) return;
-    const target = el.children[MIN_OFFSET + idx] as HTMLElement;
-    if (target) target.scrollIntoView({ block: "center", behavior });
-  };
-
-  useEffect(() => { scrollToHour(pendingHour, "auto"); }, []);
-  useEffect(() => { scrollToMinute(pendingMinute, "auto"); }, []);
-  useEffect(() => { scrollToHour(pendingHour); }, [pendingHour]);
-  useEffect(() => { scrollToMinute(pendingMinute); }, [pendingMinute]);
-
-  const handleHourScroll = () => {
-    const el = hourRef.current;
-    if (!el) return;
-    if (el.scrollTop < el.clientHeight) el.scrollTop += HOUR_OFFSET * el.children[0].clientHeight;
-    else if (el.scrollTop > el.scrollHeight - el.clientHeight * 2) el.scrollTop -= HOUR_OFFSET * el.children[0].clientHeight;
-  };
-
-  const handleMinuteScroll = () => {
-    const el = minuteRef.current;
-    if (!el) return;
-    if (el.scrollTop < el.clientHeight) el.scrollTop += MIN_OFFSET * el.children[0].clientHeight;
-    else if (el.scrollTop > el.scrollHeight - el.clientHeight * 2) el.scrollTop -= MIN_OFFSET * el.children[0].clientHeight;
-  };
+    (el.children[idx] as HTMLElement)?.scrollIntoView({ block: "center" });
+  }, []);
 
   return (
     <div className="w-full max-w-5xl mx-auto px-1 flex flex-col gap-8 pb-16">
@@ -114,13 +89,14 @@ export default function RitualsView({
           {/* Time Picker dials */}
           <div className="flex items-center justify-center gap-6 md:gap-10 py-8 relative overflow-hidden select-none">
             {/* Hour Dial */}
-            <div ref={hourRef} onScroll={handleHourScroll} className="flex flex-col items-center gap-0.5 max-h-[200px] overflow-y-auto no-scrollbar scroll-smooth overscroll-contain touch-pan-y">
-              {loopedHours.map((hour, i) => {
+            <div ref={hourRef} className="flex flex-col items-center gap-0.5 max-h-[200px] overflow-y-auto no-scrollbar overscroll-contain touch-pan-y" style={{ scrollSnapType: "y mandatory" }}>
+              {hourValues.map((hour) => {
                 const isSelected = pendingHour === hour;
                 return (
                   <button
-                    key={i}
+                    key={hour}
                     onClick={() => setPendingHour(hour)}
+                    style={{ scrollSnapAlign: "center", scrollSnapStop: "always" }}
                     className={`font-serif text-xl md:text-[36px] py-1 font-medium transition-all cursor-pointer shrink-0 ${
                       isSelected
                         ? "text-[var(--accent)] drop-shadow-[0_0_12px_rgba(var(--accent-rgb),0.35)] scale-110 font-bold"
@@ -137,14 +113,15 @@ export default function RitualsView({
             <div className="font-serif text-2xl md:text-[38px] text-[var(--accent)] pb-2">:</div>
 
             {/* Minute Dial */}
-            <div ref={minuteRef} onScroll={handleMinuteScroll} className="flex flex-col items-center gap-1.5 max-h-[200px] overflow-y-auto no-scrollbar scroll-smooth overscroll-contain touch-pan-y">
-              {loopedMins.map((minute, i) => {
+            <div ref={minuteRef} className="flex flex-col items-center gap-1.5 max-h-[200px] overflow-y-auto no-scrollbar overscroll-contain touch-pan-y" style={{ scrollSnapType: "y mandatory" }}>
+              {minuteValues.map((minute) => {
                 const isSelected = pendingMinute === minute;
                 return (
                   <button
-                    key={i}
+                    key={minute}
                     onClick={() => setPendingMinute(minute)}
-                    className={`font-serif text-2xl md:text-[38px] py-1.5 font-medium transition-all cursor-pointer ${
+                    style={{ scrollSnapAlign: "center", scrollSnapStop: "always" }}
+                    className={`font-serif text-2xl md:text-[38px] py-1.5 font-medium transition-all cursor-pointer shrink-0 ${
                       isSelected
                         ? "text-[var(--accent)] drop-shadow-[0_0_12px_rgba(var(--accent-rgb),0.35)] scale-110 font-bold"
                         : "text-zinc-650 hover:text-zinc-400 scale-90"
