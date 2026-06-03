@@ -3,20 +3,19 @@ import Header from "./components/Header";
 import NavigationDrawer from "./components/NavigationDrawer";
 import BottomNavBar, { TabId } from "./components/BottomNavBar";
 import TodayView from "./components/TodayView";
-import ArchiveView from "./components/ArchiveView";
 import RitualsView from "./components/RitualsView";
-import MindsetView from "./components/MindsetView";
 import BreathworkSession from "./components/BreathworkSession";
 import NotificationToast from "./components/NotificationToast";
+import QuietMindView from "./components/QuietMindView";
 
 import {
   DEFAULT_MINDSETS,
   DEFAULT_RITUALS,
-  DEFAULT_WISDOM,
   DEFAULT_SETTINGS,
 } from "./data";
 import FourQulView from "./components/FourQulView";
-import { MindsetId, RitualItem, WisdomItem, SettingsConfig, MindsetCategory } from "./types";
+import { MindsetId, RitualItem, SettingsConfig, UserProfile } from "./types";
+import OnboardingModal from "./components/OnboardingModal";
 
 export default function App() {
   // Navigation states
@@ -40,11 +39,6 @@ export default function App() {
     return saved ? JSON.parse(saved) : DEFAULT_RITUALS;
   });
 
-  const [wisdomList, setWisdomList] = useState<WisdomItem[]>(() => {
-    const saved = localStorage.getItem("mr_wisdom");
-    return saved ? JSON.parse(saved) : DEFAULT_WISDOM;
-  });
-
   const [settings, setSettings] = useState<SettingsConfig>(() => {
     const saved = localStorage.getItem("mr_settings");
     return saved ? JSON.parse(saved) : DEFAULT_SETTINGS;
@@ -65,6 +59,11 @@ export default function App() {
   const [streakDays, setStreakDays] = useState(() => {
     const saved = localStorage.getItem("mr_streak_days");
     return saved ? parseInt(saved, 10) : 5; // Start with 5 days as default
+  });
+
+  const [profile, setProfile] = useState<UserProfile | null>(() => {
+    const saved = localStorage.getItem("mr_profile");
+    return saved ? JSON.parse(saved) : null;
   });
 
   const [journalInput, setJournalInput] = useState("");
@@ -127,10 +126,6 @@ export default function App() {
   }, [rituals]);
 
   useEffect(() => {
-    localStorage.setItem("mr_wisdom", JSON.stringify(wisdomList));
-  }, [wisdomList]);
-
-  useEffect(() => {
     localStorage.setItem("mr_settings", JSON.stringify(settings));
   }, [settings]);
 
@@ -143,6 +138,12 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem("mr_streak_days", streakDays.toString());
   }, [streakDays]);
+
+  useEffect(() => {
+    if (profile) {
+      localStorage.setItem("mr_profile", JSON.stringify(profile));
+    }
+  }, [profile]);
 
   // Handler functions
   const handleToggleRitual = (id: string) => {
@@ -166,37 +167,15 @@ export default function App() {
     setRituals(updated);
   };
 
-  const handleToggleBookmarkWisdom = (id: string) => {
-    const updated = wisdomList.map((w) => {
-      if (w.id === id) {
-        return { ...w, bookmarked: !w.bookmarked };
-      }
-      return w;
-    });
-    setWisdomList(updated);
-  };
+  const FALLBACK_QUOTES = [
+    { text: "The sun rises not just for the world, but for the greatness within you.", category: "Vibrant", emoji: "✨" },
+    { text: "Your thoughts are seeds. Plant them with care in the fertile soil of the morning.", category: "Serene", emoji: "🌌" },
+    { text: "True power is found in the stillness before the storm. Be the calm center.", category: "Steady", emoji: "⚖️" },
+    { text: "The way we start our day determines the quality of our life. Intentionality is the compass of the soul.", category: "Vibrant", emoji: "🌅" },
+    { text: "Consistency is the silent engine of greatness.", category: "Steady", emoji: "🏔️" },
+    { text: "Nature does not hurry, yet everything is accomplished.", category: "Serene", emoji: "🌿" }
+  ];
 
-  const handleAddCustomWisdom = (
-    text: string,
-    category: MindsetCategory,
-    emoji: string
-  ) => {
-    const newInsight: WisdomItem = {
-      id: `wisdom-${Date.now()}`,
-      text,
-      category,
-      emoji,
-      date: new Date().toLocaleDateString("en-US", {
-        month: "long",
-        day: "2-digit",
-        year: "numeric",
-      }),
-      bookmarked: false,
-    };
-    setWisdomList([newInsight, ...wisdomList]);
-  };
-
-  // Triggers server-side call with Gemini AI client under safe express boundaries
   const handleGenerateAIManifestation = async () => {
     setIsAIGenerating(true);
     const activeMindset = mindsets.find((m) => m.id === activeMindsetId) || mindsets[0];
@@ -220,12 +199,10 @@ export default function App() {
           category: data.category,
           emoji: data.emoji,
         });
-
-        // Add to historical archive automatically as well!
-        handleAddCustomWisdom(data.text, data.category, data.emoji);
       }
     } catch (e) {
-      console.error("AI Generation error:", e);
+      const pick = FALLBACK_QUOTES[Math.floor(Math.random() * FALLBACK_QUOTES.length)];
+      setActiveQuote({ text: pick.text, category: pick.category, emoji: pick.emoji });
     } finally {
       setIsAIGenerating(false);
     }
@@ -239,13 +216,8 @@ export default function App() {
     setStreakDays((prev) => prev + 1);
   };
 
-  // Convert journal entries on drawer submit directly into custom insights
   const handleSaveJournalReflection = () => {
     if (!journalInput.trim()) return;
-    const activeMindset = mindsets.find((m) => m.id === activeMindsetId) || mindsets[0];
-    handleAddCustomWisdom(journalInput, activeMindset.category, "🌿");
-    
-    // Auto-update manifestation configurations as well!
     setSettings((prev) => ({ ...prev, manifestationPrompt: journalInput }));
     setJournalInput("");
   };
@@ -253,18 +225,28 @@ export default function App() {
   // Find info about selected active mindset
   const activeMindset = mindsets.find((m) => m.id === activeMindsetId) || mindsets[0];
 
+  const handleProfileComplete = (name: string, avatar: string) => {
+    setProfile({ name, avatar });
+  };
+
   return (
-    <div className="min-h-screen bg-[#050505] text-[#e5e2e1] pb-32">
+    <>
+      {!profile && (
+        <OnboardingModal onComplete={handleProfileComplete} />
+      )}
+      <div className="min-h-screen bg-[#050505] text-[#e5e2e1] pb-32">
       {/* Decorative ambient gold sky glow simulated inside margins */}
       <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[550px] h-[550px] bg-[#f2ca50]/[0.02] rounded-full blur-[120px] pointer-events-none -z-10" />
 
       {/* Main Header bar */}
-      <Header onToggleDrawer={() => setIsDrawerOpen(true)} />
+      <Header onToggleDrawer={() => setIsDrawerOpen(true)} profile={profile} />
 
       {/* Slide Navigation Menu Drawer overlay */}
       <NavigationDrawer
         isOpen={isDrawerOpen}
         onClose={() => setIsDrawerOpen(false)}
+        profile={profile}
+        onUpdateProfile={setProfile}
         streakDays={streakDays}
         onIncrementStreak={handleIncrementStreak}
         journalText={journalInput}
@@ -302,14 +284,6 @@ export default function App() {
           />
         )}
 
-        {activeTab === "archive" && (
-          <ArchiveView
-            wisdomList={wisdomList}
-            onToggleBookmark={handleToggleBookmarkWisdom}
-            onAddWisdom={handleAddCustomWisdom}
-          />
-        )}
-
         {activeTab === "rituals" && (
           <RitualsView
             config={settings}
@@ -320,13 +294,8 @@ export default function App() {
           />
         )}
 
-        {activeTab === "mindset" && (
-          <MindsetView
-            mindsets={mindsets}
-            activeMindsetId={activeMindsetId}
-            onChangeMindset={setActiveMindsetId}
-            onBeginRitual={() => setIsBreathworkActive(true)}
-          />
+        {activeTab === "quiet" && (
+          <QuietMindView />
         )}
 
         {activeTab === "4kul" && (
@@ -337,5 +306,6 @@ export default function App() {
       {/* Persistent Bottom navigation menu bar */}
       <BottomNavBar activeTab={activeTab} onTabChange={setActiveTab} />
     </div>
+    </>
   );
 }

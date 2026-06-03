@@ -1,10 +1,13 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { X, User, Flame, BookOpen, Crown, LifeBuoy, HelpCircle, Sparkles } from "lucide-react";
+import { X, User, Flame, BookOpen, Crown, HelpCircle, Camera, Pencil } from "lucide-react";
+import { UserProfile } from "../types";
 
 interface NavigationDrawerProps {
   isOpen: boolean;
   onClose: () => void;
+  profile: UserProfile | null;
+  onUpdateProfile: (profile: UserProfile) => void;
   streakDays: number;
   onIncrementStreak: () => void;
   journalText: string;
@@ -15,6 +18,8 @@ interface NavigationDrawerProps {
 export default function NavigationDrawer({
   isOpen,
   onClose,
+  profile,
+  onUpdateProfile,
   streakDays,
   onIncrementStreak,
   journalText,
@@ -22,6 +27,9 @@ export default function NavigationDrawer({
   onSaveJournalToWisdom,
 }: NavigationDrawerProps) {
   const [saveStatus, setSaveStatus] = useState<string | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [editName, setEditName] = useState(profile?.name || "");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleSave = () => {
     if (!journalText.trim()) return;
@@ -56,23 +64,93 @@ export default function NavigationDrawer({
             {/* Header / Profile section */}
             <div className="flex justify-between items-start mb-8">
               <div className="flex flex-col gap-4">
-                <div className="h-16 w-16 rounded-full overflow-hidden border border-[#D1FF26]/40 select-none bg-zinc-900">
-                  <img
-                    alt="Premium Member Avatar"
-                    className="h-full w-full object-cover grayscale opacity-90"
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuCH4o5AELAVbDKeqhGKCeGlJDWBp1ewF4ZKiP7OLb_y3K9_DSII7c4qdJoU1rN1ykOzv7IXd-bnafiqD3SVobP7XVf7vFPWnV4kIIY9m3Rsc6Lzi6AaOTPOV776ZzVXTOVYyvmEdP4xJmhpPZ4reCNZ3dYLY-yUwWy04K9AKVxxfQvjCy3gh6QSSGulb39KwP-TxGX_t4ebkEodBKnVRH-E81RIms4xo9v6t2ePWmS9WdLxn9hcSCiDKYSA61rc37xUEUpqsrnVDumD"
+                {/* Avatar */}
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  className="h-16 w-16 rounded-full overflow-hidden border border-[#D1FF26]/40 select-none bg-zinc-900 cursor-pointer group relative"
+                >
+                  {profile?.avatar ? (
+                    <img
+                      alt={profile.name}
+                      className="h-full w-full object-cover opacity-90 group-hover:opacity-60 transition-all"
+                      src={profile.avatar}
+                    />
+                  ) : (
+                    <div className="h-full w-full flex items-center justify-center bg-zinc-800 text-zinc-500 group-hover:bg-zinc-700 transition-all">
+                      <User className="w-6 h-6" />
+                    </div>
+                  )}
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all bg-black/40">
+                    <Camera className="w-5 h-5 text-white" />
+                  </div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onload = () => {
+                          onUpdateProfile({ ...profile!, avatar: reader.result as string });
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }}
                   />
                 </div>
+
+                {/* Name */}
                 <div>
-                  <h2 className="font-serif text-xl text-white font-semibold leading-tight">
-                    Aurelius <span className="font-sans italic text-xs text-[#D1FF26]">St.</span>
-                  </h2>
+                  {editing ? (
+                    <div className="flex items-center gap-2">
+                      <input
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        className="bg-zinc-800 border border-white/20 rounded px-2 py-1 text-white font-serif text-lg w-36 focus:outline-none focus:border-[#D1FF26]/50"
+                        maxLength={30}
+                        autoFocus
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            onUpdateProfile({ ...profile!, name: editName || "Morning Seeker" });
+                            setEditing(false);
+                          }
+                          if (e.key === "Escape") {
+                            setEditName(profile?.name || "");
+                            setEditing(false);
+                          }
+                        }}
+                      />
+                      <button
+                        onClick={() => {
+                          onUpdateProfile({ ...profile!, name: editName || "Morning Seeker" });
+                          setEditing(false);
+                        }}
+                        className="text-[#D1FF26] text-xs font-bold cursor-pointer"
+                      >
+                        Save
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 group">
+                      <h2 className="font-serif text-xl text-white font-semibold leading-tight">
+                        {profile?.name || "Morning Seeker"}
+                      </h2>
+                      <button
+                        onClick={() => {
+                          setEditName(profile?.name || "");
+                          setEditing(true);
+                        }}
+                        className="opacity-0 group-hover:opacity-100 transition-all text-zinc-500 hover:text-[#D1FF26] cursor-pointer"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  )}
                   <p className="font-mono text-[10px] tracking-wider uppercase text-zinc-400 font-bold mt-0.5">
                     Daily Ritualist
                   </p>
-                  <span className="text-[9px] uppercase tracking-[0.2em] font-mono text-[#D1FF26] mt-2 inline-block font-bold border border-[#D1FF26]/20 px-2.5 py-0.5 rounded bg-[#D1FF26]/5">
-                    Studio Tier
-                  </span>
                 </div>
               </div>
 

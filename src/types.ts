@@ -1,4 +1,4 @@
-export type TabId = "today" | "archive" | "rituals" | "mindset" | "4kul";
+export type TabId = "today" | "rituals" | "quiet" | "4kul";
 
 export type MindsetCategory = "Vibrant" | "Steady" | "Serene";
 
@@ -45,6 +45,11 @@ export interface SettingsConfig {
   weekendRhythm: boolean;
   journalNotes: string;
   manifestationPrompt: string;
+}
+
+export interface UserProfile {
+  name: string;
+  avatar: string; // base64 data URL or empty string
 }
 
 export interface ManifestationResponse {

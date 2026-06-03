@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">MorningRitual</string>
+    <string name="title_activity_main">MorningRitual</string>
+    <string name="package_name">com.morningritual.app</string>
+    <string name="custom_url_scheme">com.morningritual.app</string>
+</resources>

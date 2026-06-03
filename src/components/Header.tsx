@@ -1,11 +1,13 @@
 import React from "react";
-import { Menu } from "lucide-react";
+import { Menu, User } from "lucide-react";
+import { UserProfile } from "../types";
 
 interface HeaderProps {
   onToggleDrawer: () => void;
+  profile: UserProfile | null;
 }
 
-export default function Header({ onToggleDrawer }: HeaderProps) {
+export default function Header({ onToggleDrawer, profile }: HeaderProps) {
   return (
     <header className="fixed top-0 left-0 w-full z-50 bg-[#0b0b0c]/85 backdrop-blur-xl border-b border-white/10 shadow-[0_0_30px_-10px_rgba(209,255,38,0.15)] flex justify-between items-center px-6 h-16">
       <div className="flex items-center gap-4">
@@ -28,11 +30,17 @@ export default function Header({ onToggleDrawer }: HeaderProps) {
           onClick={onToggleDrawer}
           className="h-8 w-8 rounded-full overflow-hidden border border-[#D1FF26]/30 hover:opacity-85 hover:border-[#D1FF26] transition-all active:scale-95 cursor-pointer bg-zinc-900"
         >
-          <img
-            alt="User Profile"
-            className="h-full w-full object-cover grayscale opacity-90 hover:grayscale-0 hover:opacity-100 transition-all"
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuA8iS4JDp6D5AmIVn_JEJIhf77bzSoY6gJVCcecI99fMvaY-A1IM7xMab-YEZ1_khj5lQ7bAdxnGLir6mcd8x4x4YYv-E0j6BKxKQ_YhCY88zCvT0uPdfB7_q0_naSjYLFynilhKaqWPX3Zb-IOexcDkIH24eIqPED_W2I5Ujn5kQIXO_qhey7mkSozUhUYFKemOJ8GLkD21bp6FbEL3zMEgI64uUj0rr91DHh7r2B_F79grwj5sS6Xfa8NVz_2eCpEYQtvZouKY4uq"
-          />
+          {profile?.avatar ? (
+            <img
+              alt={profile.name}
+              className="h-full w-full object-cover grayscale opacity-90 hover:grayscale-0 hover:opacity-100 transition-all"
+              src={profile.avatar}
+            />
+          ) : (
+            <div className="h-full w-full flex items-center justify-center bg-zinc-800 text-zinc-400">
+              <User className="w-4 h-4" />
+            </div>
+          )}
         </button>
       </div>
     </header>

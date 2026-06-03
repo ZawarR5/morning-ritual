@@ -1,0 +1,8 @@
+node_modules
+android
+scripts
+.git
+.github
+*.md
+.vercel
+assets

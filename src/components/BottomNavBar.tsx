@@ -1,8 +1,8 @@
 import React from "react";
-import { Sunrise, BookOpen, Bell, BrainCircuit, BookMarked } from "lucide-react";
+import { Sunrise, Bell, BookMarked, Moon } from "lucide-react";
 import { motion } from "motion/react";
 
-export type TabId = "today" | "archive" | "rituals" | "mindset" | "4kul";
+export type TabId = "today" | "rituals" | "quiet" | "4kul";
 
 interface BottomNavBarProps {
   activeTab: TabId;
@@ -12,9 +12,8 @@ interface BottomNavBarProps {
 export default function BottomNavBar({ activeTab, onTabChange }: BottomNavBarProps) {
   const navItems = [
     { id: "today" as TabId, label: "Today", icon: Sunrise },
-    { id: "archive" as TabId, label: "Archive", icon: BookOpen },
     { id: "rituals" as TabId, label: "Rituals", icon: Bell },
-    { id: "mindset" as TabId, label: "Mindset", icon: BrainCircuit },
+    { id: "quiet" as TabId, label: "Quiet Mind", icon: Moon },
     { id: "4kul" as TabId, label: "4 Kul", icon: BookMarked },
   ];
 
