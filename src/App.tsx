@@ -18,6 +18,7 @@ import { MindsetId, RitualItem, SettingsConfig, UserProfile } from "./types";
 import OnboardingModal from "./components/OnboardingModal";
 import { getMood } from "./themes";
 import { getQuoteForMindset } from "./quotes";
+import { LocalNotifications } from "@capacitor/local-notifications";
 
 export default function App() {
   // Navigation states
@@ -117,6 +118,35 @@ export default function App() {
     audio.play().catch(() => {});
   }, []);
 
+  const scheduleNativeAlarm = useCallback(async (hour: string, minute: string, period: string) => {
+    try {
+      let h = parseInt(hour, 10);
+      const m = parseInt(minute, 10);
+      if (period === "PM" && h !== 12) h += 12;
+      if (period === "AM" && h === 12) h = 0;
+
+      const now = new Date();
+      const scheduled = new Date();
+      scheduled.setHours(h, m, 0, 0);
+      if (scheduled <= now) scheduled.setDate(scheduled.getDate() + 1);
+
+      // Cancel any existing scheduled alarm
+      await LocalNotifications.cancel({ notifications: [{ id: 1 }] });
+
+      await LocalNotifications.schedule({
+        notifications: [{
+          id: 1,
+          title: "☀️ Good Morning",
+          body: "Your morning ritual is ready to begin.",
+          schedule: { at: scheduled, allowWhileIdle: true },
+          sound: "alarm.mp3",
+          smallIcon: "ic_stat_icon",
+          largeIcon: "ic_launcher_round",
+        }],
+      });
+    } catch {}
+  }, []);
+
   useEffect(() => {
     const todayKey = new Date().toDateString();
     const sentKey = "mr_notification_sent";
@@ -159,7 +189,8 @@ export default function App() {
 
   useEffect(() => {
     localStorage.setItem("mr_settings", JSON.stringify(settings));
-  }, [settings]);
+    scheduleNativeAlarm(settings.notificationHour, settings.notificationMinute, settings.notificationPeriod);
+  }, [settings, scheduleNativeAlarm]);
 
   useEffect(() => {
     localStorage.setItem("mr_active_quote_text", activeQuote.text);
