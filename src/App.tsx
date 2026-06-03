@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import Header from "./components/Header";
 import NavigationDrawer from "./components/NavigationDrawer";
 import BottomNavBar, { TabId } from "./components/BottomNavBar";
@@ -71,6 +71,7 @@ export default function App() {
 
   const [isAIGenerating, setIsAIGenerating] = useState(false);
   const [showToast, setShowToast] = useState(false);
+  const alarmRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     localStorage.setItem("mr_mood", mood);
@@ -97,13 +98,23 @@ export default function App() {
     });
   }, []);
 
+  // Unlock audio playback on first user tap (required by browser autoplay policy)
+  useEffect(() => {
+    const unlock = () => {
+      if (!alarmRef.current) {
+        alarmRef.current = new Audio("/alarm-sound.mp3");
+      }
+      alarmRef.current.load();
+      document.removeEventListener("pointerdown", unlock);
+    };
+    document.addEventListener("pointerdown", unlock, { once: true });
+  }, []);
+
   const playAlarm = useCallback(() => {
-    try {
-      const audio = new Audio("/alarm-sound.mp3");
-      audio.loop = false;
-      audio.volume = 0.5;
-      audio.play();
-    } catch {}
+    const audio = alarmRef.current || new Audio("/alarm-sound.mp3");
+    audio.currentTime = 0;
+    audio.volume = 0.5;
+    audio.play().catch(() => {});
   }, []);
 
   useEffect(() => {
