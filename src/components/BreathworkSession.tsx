@@ -25,9 +25,10 @@ export default function BreathworkSession({
 
   // Initialize background ambient music
   useEffect(() => {
-    const audio = new Audio('/bg-music.mp3');
+    const audio = new Audio('/new-bg-music.mp3');
     audio.loop = true;
     audio.volume = 0.15;
+    audio.play().then(() => setSoundEnabled(true)).catch(() => setSoundEnabled(false));
     bgMusicRef.current = audio;
     return () => {
       audio.pause();

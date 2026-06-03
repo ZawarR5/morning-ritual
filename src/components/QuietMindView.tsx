@@ -1,11 +1,16 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { Moon, Volume2, VolumeX } from "lucide-react";
 
 const AUDIO_URL = "/new-bg-music.mp3";
 
 export default function QuietMindView() {
-  const [soundEnabled, setSoundEnabled] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    if (!audioRef.current) return;
+    audioRef.current.play().then(() => setSoundEnabled(true)).catch(() => setSoundEnabled(false));
+  }, []);
 
   const handleToggleSound = () => {
     if (!audioRef.current) return;
@@ -62,15 +67,6 @@ export default function QuietMindView() {
           {soundEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
         </button>
       </div>
-
-      {/* Tap to start hint */}
-      {!soundEnabled && (
-        <div className="text-center -mt-6">
-          <span className="text-[10px] font-mono tracking-wider text-zinc-500 animate-pulse">
-            Tap the speaker icon to begin
-          </span>
-        </div>
-      )}
 
       {/* Dhikr Content */}
       <div className="text-center space-y-10 max-w-3xl mx-auto">
