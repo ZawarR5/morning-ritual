@@ -1,8 +1,8 @@
 import React from "react";
-import { Sunrise, Bell, BookMarked, Moon } from "lucide-react";
+import { Sunrise, Bell, BookMarked, Moon, Gamepad2 } from "lucide-react";
 import { motion } from "motion/react";
 
-export type TabId = "today" | "rituals" | "quiet" | "4kul";
+export type TabId = "today" | "rituals" | "quiet" | "4kul" | "games";
 
 interface BottomNavBarProps {
   activeTab: TabId;
@@ -15,6 +15,7 @@ export default function BottomNavBar({ activeTab, onTabChange }: BottomNavBarPro
     { id: "rituals" as TabId, label: "Prayer", icon: Bell },
     { id: "quiet" as TabId, label: "Quiet Mind", icon: Moon },
     { id: "4kul" as TabId, label: "4 Kul", icon: BookMarked },
+    { id: "games" as TabId, label: "Games", icon: Gamepad2 },
   ];
 
   return (

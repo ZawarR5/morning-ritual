@@ -1,4 +1,4 @@
-export type TabId = "today" | "rituals" | "quiet" | "4kul";
+export type TabId = "today" | "rituals" | "quiet" | "4kul" | "games";
 
 export type MindsetCategory = "Vibrant" | "Steady" | "Serene";
 

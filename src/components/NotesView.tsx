@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { X, Plus, Trash2, Edit3, Check, StickyNote, Search, CheckSquare, Square } from "lucide-react";
+import { X, Plus, Trash2, Edit3, Check, StickyNote, Search, CheckSquare, Square, Download, Upload } from "lucide-react";
 
 interface Note {
   id: string;
@@ -43,6 +43,8 @@ export default function NotesView({ isOpen, onClose }: NotesViewProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectMode, setSelectMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [importMsg, setImportMsg] = useState<{ type: "ok" | "err"; text: string } | null>(null);
+  const importInputRef = useRef<HTMLInputElement>(null);
 
   const persist = (updated: Note[]) => {
     setNotes(updated);
@@ -117,6 +119,88 @@ export default function NotesView({ isOpen, onClose }: NotesViewProps) {
     }
     persist(updated);
     setEditingNote(null);
+  };
+
+  const handleBackup = () => {
+    const payload = {
+      app: "morning-ritual",
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      count: notes.length,
+      notes,
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `morning-ritual-notes-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    setImportMsg({ type: "ok", text: `Saved ${notes.length} note${notes.length !== 1 ? "s" : ""} to file.` });
+    setTimeout(() => setImportMsg(null), 3000);
+  };
+
+  const handleImportClick = () => {
+    importInputRef.current?.click();
+  };
+
+  const handleImportFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const parsed = JSON.parse(reader.result as string);
+        const incoming: unknown = Array.isArray(parsed) ? parsed : parsed?.notes;
+        if (!Array.isArray(incoming)) {
+          setImportMsg({ type: "err", text: "That file doesn't look like a notes backup." });
+          setTimeout(() => setImportMsg(null), 3000);
+          return;
+        }
+        const valid = incoming.filter(
+          (n: any) =>
+            n && typeof n === "object" && typeof n.id === "string" &&
+            typeof n.title === "string" && typeof n.content === "string"
+        ) as Note[];
+        if (valid.length === 0) {
+          setImportMsg({ type: "err", text: "No valid notes found in that file." });
+          setTimeout(() => setImportMsg(null), 3000);
+          return;
+        }
+        const existingIds = new Set(notes.map((n) => n.id));
+        const merged = [...notes];
+        let added = 0;
+        for (const n of valid) {
+          if (!existingIds.has(n.id)) {
+            merged.push({
+              id: n.id,
+              title: n.title,
+              content: n.content,
+              createdAt: n.createdAt || new Date().toISOString(),
+              updatedAt: n.updatedAt || new Date().toISOString(),
+            });
+            added += 1;
+          }
+        }
+        persist(merged);
+        setImportMsg({
+          type: "ok",
+          text: `Imported ${added} new note${added !== 1 ? "s" : ""}${added < valid.length ? ` (${valid.length - added} duplicate skipped)` : ""}.`,
+        });
+        setTimeout(() => setImportMsg(null), 3500);
+      } catch {
+        setImportMsg({ type: "err", text: "Couldn't read the file. Is it a valid JSON?" });
+        setTimeout(() => setImportMsg(null), 3000);
+      }
+    };
+    reader.onerror = () => {
+      setImportMsg({ type: "err", text: "Couldn't read the file." });
+      setTimeout(() => setImportMsg(null), 3000);
+    };
+    reader.readAsText(file);
   };
 
   const filtered = [...notes]
@@ -323,7 +407,7 @@ export default function NotesView({ isOpen, onClose }: NotesViewProps) {
 
             {/* Bottom bar */}
             {!editingNote && (
-              <div className="p-4 border-t border-white/10">
+              <div className="p-4 border-t border-white/10 space-y-2">
                 {selectMode ? (
                   <button
                     onClick={() => setBatchDeleteConfirm(true)}
@@ -338,13 +422,56 @@ export default function NotesView({ isOpen, onClose }: NotesViewProps) {
                     Delete Selected ({selectedIds.size})
                   </button>
                 ) : (
-                  <button
-                    onClick={handleAdd}
-                    className="w-full py-3 text-xs font-mono tracking-wider uppercase bg-[var(--accent)] text-[#0b0b0c] font-bold rounded-xl hover:shadow-[0_0_20px_rgba(var(--accent-rgb),0.3)] transition-all cursor-pointer flex items-center justify-center gap-2"
-                  >
-                    <Plus className="w-4 h-4" />
-                    Add Note
-                  </button>
+                  <>
+                    {importMsg && (
+                      <div
+                        className={`text-[11px] font-sans text-center py-2 px-3 rounded-lg ${
+                          importMsg.type === "ok"
+                            ? "text-[var(--accent)] bg-[var(--accent)]/5 border border-[var(--accent)]/15"
+                            : "text-red-400 bg-red-500/5 border border-red-500/15"
+                        }`}
+                      >
+                        {importMsg.text}
+                      </div>
+                    )}
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        onClick={handleBackup}
+                        disabled={notes.length === 0}
+                        title="Download all notes as a JSON file"
+                        className={`py-2 text-[10px] font-mono tracking-wider uppercase rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+                          notes.length === 0
+                            ? "text-zinc-700 bg-white/[0.01] border border-white/5 cursor-not-allowed"
+                            : "text-zinc-400 bg-white/[0.02] border border-white/10 hover:bg-white/5 hover:text-zinc-200 cursor-pointer"
+                        }`}
+                      >
+                        <Download className="w-3.5 h-3.5" />
+                        Backup Notes
+                      </button>
+                      <button
+                        onClick={handleImportClick}
+                        title="Import notes from a previously saved backup file"
+                        className="py-2 text-[10px] font-mono tracking-wider uppercase rounded-lg transition-all flex items-center justify-center gap-1.5 text-zinc-400 bg-white/[0.02] border border-white/10 hover:bg-white/5 hover:text-zinc-200 cursor-pointer"
+                      >
+                        <Upload className="w-3.5 h-3.5" />
+                        Import Notes
+                      </button>
+                    </div>
+                    <input
+                      ref={importInputRef}
+                      type="file"
+                      accept="application/json,.json"
+                      onChange={handleImportFile}
+                      className="hidden"
+                    />
+                    <button
+                      onClick={handleAdd}
+                      className="w-full py-3 text-xs font-mono tracking-wider uppercase bg-[var(--accent)] text-[#0b0b0c] font-bold rounded-xl hover:shadow-[0_0_20px_rgba(var(--accent-rgb),0.3)] transition-all cursor-pointer flex items-center justify-center gap-2"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Add Note
+                    </button>
+                  </>
                 )}
               </div>
             )}

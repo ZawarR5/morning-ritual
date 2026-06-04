@@ -14,6 +14,7 @@ import {
   DEFAULT_SETTINGS,
 } from "./data";
 import FourQulView from "./components/FourQulView";
+import GamesView from "./components/GamesView";
 import { MindsetId, RitualItem, SettingsConfig, UserProfile } from "./types";
 import OnboardingModal from "./components/OnboardingModal";
 import { getMood } from "./themes";
@@ -188,6 +189,22 @@ export default function App() {
     setRituals(updated);
   };
 
+  const handleAddRitual = (title: string, icon: string) => {
+    const newRitual: RitualItem = {
+      id: `custom-${Date.now()}`,
+      title,
+      description: "",
+      duration: "",
+      completed: false,
+      icon,
+    };
+    setRituals((prev) => [...prev, newRitual]);
+  };
+
+  const handleDeleteRitual = (id: string) => {
+    setRituals((prev) => prev.filter((r) => r.id !== id));
+  };
+
   const handleCompleteBreathwork = () => {
     // Setting breathwork completed launches progress count updates
     const updated = rituals.map((r) => {
@@ -310,6 +327,8 @@ export default function App() {
             quoteCategory={activeQuote.category}
             rituals={rituals}
             onToggleRitual={handleToggleRitual}
+            onAddRitual={handleAddRitual}
+            onDeleteRitual={handleDeleteRitual}
             onStartBreathwork={() => setIsBreathworkActive(true)}
           />
         )}
@@ -325,6 +344,8 @@ export default function App() {
         {activeTab === "4kul" && (
           <FourQulView onFinish={() => setActiveTab("today")} />
         )}
+
+        {activeTab === "games" && <GamesView />}
       </main>
 
       {/* Floating WhatsApp support button */}

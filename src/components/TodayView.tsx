@@ -9,6 +9,8 @@ interface TodayViewProps {
   quoteCategory: string;
   rituals: RitualItem[];
   onToggleRitual: (id: string) => void;
+  onAddRitual: (title: string, icon: string) => void;
+  onDeleteRitual: (id: string) => void;
   onStartBreathwork: () => void;
 }
 
@@ -18,6 +20,8 @@ export default function TodayView({
   quoteCategory,
   rituals,
   onToggleRitual,
+  onAddRitual,
+  onDeleteRitual,
   onStartBreathwork,
 }: TodayViewProps) {
   return (
@@ -43,7 +47,7 @@ export default function TodayView({
       <section className="w-full grid grid-cols-1 md:grid-cols-12 gap-5 px-2 mb-16">
         {/* Daily Spirit card (4 cols on desktop) */}
         <div className="md:col-span-5 lg:col-span-4 flex flex-col">
-          <DailySpirit rituals={rituals} onToggleRitual={onToggleRitual} />
+          <DailySpirit rituals={rituals} onToggleRitual={onToggleRitual} onAddRitual={onAddRitual} onDeleteRitual={onDeleteRitual} />
         </div>
 
         {/* Focus Activity Start Session card (7 cols or 8 cols on desktop) */}
