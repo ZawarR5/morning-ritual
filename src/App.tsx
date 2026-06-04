@@ -15,6 +15,8 @@ import {
 } from "./data";
 import FourQulView from "./components/FourQulView";
 import GamesView from "./components/GamesView";
+import QuranView from "./components/QuranView";
+import HadithView from "./components/HadithView";
 import { MindsetId, RitualItem, SettingsConfig, UserProfile } from "./types";
 import OnboardingModal from "./components/OnboardingModal";
 import { getMood } from "./themes";
@@ -25,6 +27,52 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<TabId>("today");
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isBreathworkActive, setIsBreathworkActive] = useState(false);
+  const [showQuran, setShowQuran] = useState(false);
+  const [showHadith, setShowHadith] = useState(false);
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
+  const previousTab = useRef<TabId>("today");
+
+  // Android / mobile back button handler
+  useEffect(() => {
+    // Push a history entry so popstate can be intercepted
+    window.history.pushState(null, "", window.location.href);
+
+    const handlePopState = () => {
+      // Re-push immediately so we can intercept again
+      window.history.pushState(null, "", window.location.href);
+
+      if (isDrawerOpen) { setIsDrawerOpen(false); return; }
+      if (showQuran) { setShowQuran(false); return; }
+      if (showHadith) { setShowHadith(false); return; }
+      if (isBreathworkActive) { setIsBreathworkActive(false); return; }
+      if (activeTab !== "today") { setActiveTab("today"); return; }
+      setShowExitConfirm(true);
+    };
+
+    window.addEventListener("popstate", handlePopState);
+
+    const capacitor = (window as any).Capacitor;
+    if (capacitor?.isNativePlatform()) {
+      capacitor.Plugins?.App?.removeAllListeners("backButton");
+      capacitor.Plugins?.App?.addListener("backButton", () => {
+        if (isDrawerOpen) { setIsDrawerOpen(false); return; }
+        if (showQuran) { setShowQuran(false); return; }
+        if (showHadith) { setShowHadith(false); return; }
+        if (isBreathworkActive) { setIsBreathworkActive(false); return; }
+        if (activeTab !== "today") { setActiveTab("today"); return; }
+        setShowExitConfirm(true);
+      });
+    }
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, [isDrawerOpen, showQuran, showHadith, isBreathworkActive, activeTab]);
+
+  // Track previous tab for back navigation
+  useEffect(() => {
+    previousTab.current = activeTab;
+  }, [activeTab]);
 
   // Core application states loaded from LocalStorage or fallback data
   const [mindsets, setMindsets] = useState(() => {
@@ -273,7 +321,9 @@ export default function App() {
   const activeMindset = mindsets.find((m) => m.id === activeMindsetId) || mindsets[0];
 
   const handleProfileComplete = (name: string, avatar: string) => {
-    setProfile({ name, avatar });
+    const profileData = { name, avatar };
+    setProfile(profileData);
+    localStorage.setItem("mr_profile", JSON.stringify(profileData));
   };
 
   return (
@@ -299,6 +349,8 @@ export default function App() {
         onDecrementStreak={handleDecrementStreak}
         mood={mood}
         onMoodChange={setMood}
+        onOpenQuran={() => setShowQuran(true)}
+        onOpenHadith={() => setShowHadith(true)}
       />
 
       {/* Morning notification toast */}
@@ -347,6 +399,36 @@ export default function App() {
 
         {activeTab === "games" && <GamesView />}
       </main>
+
+      {showQuran && <QuranView onClose={() => setShowQuran(false)} />}
+      {showHadith && <HadithView onClose={() => setShowHadith(false)} />}
+
+      {/* Exit confirmation dialog for Android back on home screen */}
+      {showExitConfirm && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="bg-zinc-900 border border-zinc-700 rounded-2xl p-6 mx-4 max-w-sm w-full shadow-2xl">
+            <h3 className="text-lg font-semibold text-zinc-100 mb-2">Exit App?</h3>
+            <p className="text-sm text-zinc-400 mb-6">Are you sure you want to close Morning Ritual?</p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowExitConfirm(false)}
+                className="px-5 py-2 rounded-xl bg-zinc-800 text-zinc-300 text-sm font-medium hover:bg-zinc-700 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  setShowExitConfirm(false);
+                  window.history.back();
+                }}
+                className="px-5 py-2 rounded-xl bg-[var(--accent)] text-black text-sm font-medium hover:opacity-90 transition-opacity"
+              >
+                Exit
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Floating WhatsApp support button */}
       <a

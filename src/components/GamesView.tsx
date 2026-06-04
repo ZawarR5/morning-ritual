@@ -975,6 +975,7 @@ function TetrisGame({ onBack }: { onBack: () => void }) {
   const curColor = useRef("");
   const boardRef = useRef<string[][]>([]);
   const scoreRef = useRef(0);
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
 
   const resetBoard = useCallback(() => {
     const b = Array.from({ length: TETRIS_ROWS }, () => Array(TETRIS_COLS).fill(""));
@@ -1096,6 +1097,28 @@ function TetrisGame({ onBack }: { onBack: () => void }) {
     lockPiece();
   }, [lockPiece]);
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const t = e.touches[0];
+    touchStartRef.current = { x: t.clientX, y: t.clientY };
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!touchStartRef.current || gameOverRef.current || pausedRef.current) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - touchStartRef.current.x;
+    const dy = t.clientY - touchStartRef.current.y;
+    touchStartRef.current = null;
+    const minSwipe = 20;
+    if (Math.abs(dx) < minSwipe && Math.abs(dy) < minSwipe) return;
+    if (Math.abs(dx) > Math.abs(dy)) {
+      if (dx > 0) moveRight();
+      else moveLeft();
+    } else {
+      if (dy > 0) drop();
+      else rotate();
+    }
+  };
+
   useEffect(() => {
     resetBoard();
     spawnPiece();
@@ -1152,7 +1175,12 @@ function TetrisGame({ onBack }: { onBack: () => void }) {
         <span>Best: <span className="text-[var(--accent)] font-bold">{highScore}</span></span>
         <button onClick={() => setPaused(p => { pausedRef.current = !p; return !p; })} className="text-zinc-500 hover:text-white transition-colors cursor-pointer px-2 py-1 rounded hover:bg-white/5 text-[10px] uppercase tracking-wider">{paused ? "Resume" : "Pause"}</button>
       </div>
-      <div className="mx-auto border border-white/10 rounded-xl overflow-hidden" style={{ width: "min(100%, 300px)" }}>
+      <div
+        className="mx-auto border border-white/10 rounded-xl overflow-hidden select-none"
+        style={{ width: "min(100%, 300px)", touchAction: "none" }}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
         {displayBoard.map((row, ri) => (
           <div key={ri} className="flex" style={{ height: `calc(min(100vw, 300px) / ${TETRIS_COLS})` }}>
             {row.map((cell, ci) => (
@@ -1161,7 +1189,36 @@ function TetrisGame({ onBack }: { onBack: () => void }) {
           </div>
         ))}
       </div>
-      <p className="text-center text-[10px] text-zinc-500 font-moto">Arrow keys: move &middot; Up: rotate &middot; Space: drop &middot; P: pause</p>
+      <p className="text-center text-[10px] text-zinc-500 font-mono">Swipe or use buttons &middot; P: pause</p>
+      {/* Mobile controls */}
+      <div className="flex justify-center select-none">
+        <div className="grid grid-cols-4 gap-2">
+          <button
+            onTouchStart={(e) => { e.preventDefault(); moveLeft(); }}
+            onClick={() => moveLeft()}
+            className="bg-white/[0.03] border border-white/10 rounded-xl w-14 h-14 flex items-center justify-center text-zinc-400 hover:bg-white/10 hover:text-white active:scale-95 transition-all cursor-pointer text-base"
+            aria-label="Move Left"
+          >◀</button>
+          <button
+            onTouchStart={(e) => { e.preventDefault(); moveRight(); }}
+            onClick={() => moveRight()}
+            className="bg-white/[0.03] border border-white/10 rounded-xl w-14 h-14 flex items-center justify-center text-zinc-400 hover:bg-white/10 hover:text-white active:scale-95 transition-all cursor-pointer text-base"
+            aria-label="Move Right"
+          >▶</button>
+          <button
+            onTouchStart={(e) => { e.preventDefault(); rotate(); }}
+            onClick={() => rotate()}
+            className="bg-white/[0.03] border border-white/10 rounded-xl w-14 h-14 flex items-center justify-center text-zinc-400 hover:bg-white/10 hover:text-white active:scale-95 transition-all cursor-pointer text-base"
+            aria-label="Rotate"
+          >↻</button>
+          <button
+            onTouchStart={(e) => { e.preventDefault(); drop(); }}
+            onClick={() => drop()}
+            className="bg-white/[0.03] border border-white/10 rounded-xl w-14 h-14 flex items-center justify-center text-zinc-400 hover:bg-white/10 hover:text-white active:scale-95 transition-all cursor-pointer text-base"
+            aria-label="Drop"
+          >▼</button>
+        </div>
+      </div>
       {gameOver && (
         <div className="flex flex-col items-center gap-3 mt-2">
           <p className="text-sm text-zinc-400 font-mono">Score: {score}</p>
@@ -1296,11 +1353,20 @@ function GuessWordGame({ onBack }: { onBack: () => void }) {
     if (correctFlash) return;
     if (guess.trim().toLowerCase() === target.toLowerCase()) {
       const pts = Math.max(0, Math.min(10, Math.floor(timeLeft / 3)));
-      setScore((s) => s + pts);
+      setScore((s) => Math.min(10, s + pts));
+      setTimeLeft(30);
       setCorrectFlash(true);
       setTimeout(() => { setCorrectFlash(false); nextWord(); }, 800);
     } else {
       setGuess("");
+      setTimeLeft((prev) => {
+        const next = prev - 5;
+        if (next <= 0) {
+          setGameOver(true);
+          return 0;
+        }
+        return next;
+      });
     }
   };
 
@@ -1322,7 +1388,7 @@ function GuessWordGame({ onBack }: { onBack: () => void }) {
       </div>
       <div className="flex justify-between text-xs font-mono -mt-3">
         <span style={{ color: timerColor }}>{timeLeft}s</span>
-        <span className="text-zinc-500">score: <span className="text-white font-bold">{score}</span> <span className="text-zinc-700">|</span> best: <span className="text-[var(--accent)] font-bold">{highScore}</span></span>
+        <span className="text-zinc-500">score: <span className="text-white font-bold">{score}</span><span className="text-zinc-700">/10</span> <span className="text-zinc-700">|</span> best: <span className="text-[var(--accent)] font-bold">{highScore}</span></span>
       </div>
 
       {/* Word boxes */}
@@ -1380,7 +1446,12 @@ function GuessWordGame({ onBack }: { onBack: () => void }) {
       {gameOver && (
         <div className="flex flex-col items-center gap-3 text-center">
           <p className="font-serif text-2xl text-white">Time's up!</p>
-          <p className="font-serif text-5xl font-bold" style={{ color: timerColor }}>{score}/10</p>
+          {target && (
+            <p className="font-sans text-base text-zinc-400">
+              The word was: <span className="text-white font-bold uppercase tracking-wider">{target}</span>
+            </p>
+          )}
+          <p className="font-serif text-5xl font-bold" style={{ color: timerColor }}>{score}<span className="text-2xl text-zinc-600">/10</span></p>
           {score >= highScore && score > 0 && <p className="text-[10px] text-[var(--accent)] font-mono tracking-wider">New best!</p>}
           <p className="text-xs text-zinc-500 font-mono">Best: <span className="text-white font-bold">{highScore}</span></p>
           <button onClick={startGame} className="bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-zinc-950 font-mono text-[10px] font-bold uppercase tracking-[0.2em] px-8 py-3 rounded hover:shadow-[0_0_30px_rgba(var(--accent-rgb),0.4)] transition-all active:scale-95 cursor-pointer"><RotateCcw className="w-3.5 h-3.5 inline mr-1" />Play Again</button>

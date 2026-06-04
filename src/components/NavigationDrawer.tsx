@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { X, User, Flame, HelpCircle, Camera, Pencil, StickyNote, ChevronDown } from "lucide-react";
+import { X, User, Flame, HelpCircle, Camera, Pencil, StickyNote, ChevronDown, BookOpen, MessageCircle } from "lucide-react";
 import NotesView from "./NotesView";
 import { UserProfile } from "../types";
 import { moods } from "../themes";
@@ -15,6 +15,8 @@ interface NavigationDrawerProps {
   onDecrementStreak: () => void;
   mood: string;
   onMoodChange: (mood: string) => void;
+  onOpenQuran?: () => void;
+  onOpenHadith?: () => void;
 }
 
 export default function NavigationDrawer({
@@ -27,6 +29,8 @@ export default function NavigationDrawer({
   onDecrementStreak,
   mood,
   onMoodChange,
+  onOpenQuran,
+  onOpenHadith,
 }: NavigationDrawerProps) {
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState(profile?.name || "");
@@ -231,6 +235,26 @@ export default function NavigationDrawer({
                 </div>
               </div>
             </nav>
+
+            {onOpenHadith && (
+              <button
+                onClick={() => { onOpenHadith(); onClose(); }}
+                className="flex items-center gap-4 p-3 rounded-xl text-zinc-300 hover:bg-white/5 transition-colors w-full text-left cursor-pointer mb-2"
+              >
+                <MessageCircle className="w-5 h-5 text-[var(--accent)]" />
+                <span className="font-sans text-sm font-medium">Hadith</span>
+              </button>
+            )}
+
+            {onOpenQuran && (
+              <button
+                onClick={() => { onOpenQuran(); onClose(); }}
+                className="flex items-center gap-4 p-3 rounded-xl text-zinc-300 hover:bg-white/5 transition-colors w-full text-left cursor-pointer mb-2"
+              >
+                <BookOpen className="w-5 h-5 text-[var(--accent)]" />
+                <span className="font-sans text-sm font-medium">Quran</span>
+              </button>
+            )}
 
             {/* Bottom Support section */}
             <div className="mt-auto pt-6 border-t border-white/10">
