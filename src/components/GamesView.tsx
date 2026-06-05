@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { RotateCcw, Sparkles, Brain, ArrowLeft, Trophy, Wind, X, Music, Grid3x3, Keyboard } from "lucide-react";
+import { RotateCcw, Sparkles, Brain, ArrowLeft, Trophy, Wind, X, Music, Grid3x3, Keyboard, Shapes } from "lucide-react";
 
 const GAMES = [
   {
@@ -59,6 +59,14 @@ const GAMES = [
     emoji: "🔤",
     color: "var(--accent)",
   },
+  {
+    id: "connect-dots",
+    title: "Connect the Dots",
+    description: "Link matching colored dots without crossing paths",
+    icon: Shapes,
+    emoji: "🔗",
+    color: "var(--accent)",
+  },
 ];
 
 const EMOJIS = ["🌿", "🌊", "🌙", "☀️", "🕊️", "✨", "🌸", "🍃", "🔥", "💧", "🌌", "⭐"];
@@ -70,6 +78,22 @@ function shuffle<T>(arr: T[]): T[] {
     [a[i], a[j]] = [a[j], a[i]];
   }
   return a;
+}
+
+function playNote(freq: number, duration: number, volume = 0.12) {
+  try {
+    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.frequency.value = freq;
+    osc.type = "sine";
+    gain.gain.setValueAtTime(volume, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+    osc.start();
+    osc.stop(ctx.currentTime + duration);
+  } catch {}
 }
 
 interface Card {
@@ -976,6 +1000,20 @@ function TetrisGame({ onBack }: { onBack: () => void }) {
   const boardRef = useRef<string[][]>([]);
   const scoreRef = useRef(0);
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const dasTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const arrTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const clearDAS = useCallback(() => {
+    if (dasTimerRef.current) { clearTimeout(dasTimerRef.current); dasTimerRef.current = null; }
+    if (arrTimerRef.current) { clearInterval(arrTimerRef.current); arrTimerRef.current = null; }
+  }, []);
+
+  const startDAS = useCallback((dir: () => void) => {
+    clearDAS();
+    dasTimerRef.current = setTimeout(() => {
+      arrTimerRef.current = setInterval(dir, 50);
+    }, 170);
+  }, [clearDAS]);
 
   const resetBoard = useCallback(() => {
     const b = Array.from({ length: TETRIS_ROWS }, () => Array(TETRIS_COLS).fill(""));
@@ -987,7 +1025,8 @@ function TetrisGame({ onBack }: { onBack: () => void }) {
     gameOverRef.current = false;
     setPaused(false);
     pausedRef.current = false;
-  }, []);
+    clearDAS();
+  }, [clearDAS]);
 
   const collide = (b: string[][], shp: number[][], px: number, py: number): boolean => {
     for (let r = 0; r < shp.length; r++) {
@@ -1080,6 +1119,7 @@ function TetrisGame({ onBack }: { onBack: () => void }) {
   }, []);
 
   const rotate = useCallback(() => {
+    if (gameOverRef.current) return;
     const shp = curPiece.current;
     const rot = shp[0].map((_, c) => shp.map(row => row[c]).reverse());
     if (!collide(boardRef.current, rot, curX.current, curY.current)) {
@@ -1129,15 +1169,24 @@ function TetrisGame({ onBack }: { onBack: () => void }) {
         return;
       }
       if (pausedRef.current) return;
-      if (e.key === "ArrowLeft") moveLeft();
-      if (e.key === "ArrowRight") moveRight();
-      if (e.key === "ArrowUp") rotate();
-      if (e.key === "ArrowDown") drop();
-      if (e.key === " ") hardDrop();
+      if ((e.key === "ArrowLeft" || e.key === "ArrowRight") && e.repeat) return;
+      if (e.key === "ArrowLeft") { e.preventDefault(); moveLeft(); startDAS(moveLeft); }
+      else if (e.key === "ArrowRight") { e.preventDefault(); moveRight(); startDAS(moveRight); }
+      else if (e.key === "ArrowUp") { e.preventDefault(); if (!e.repeat) rotate(); }
+      else if (e.key === "ArrowDown") { e.preventDefault(); if (!e.repeat) drop(); }
+      else if (e.key === " ") { e.preventDefault(); if (!e.repeat) hardDrop(); }
+    };
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft" || e.key === "ArrowRight") clearDAS();
     };
     window.addEventListener("keydown", handleKey);
-    return () => window.removeEventListener("keydown", handleKey);
-  }, [resetBoard, spawnPiece, drop, moveLeft, moveRight, rotate, hardDrop]);
+    window.addEventListener("keyup", handleKeyUp);
+    return () => {
+      window.removeEventListener("keydown", handleKey);
+      window.removeEventListener("keyup", handleKeyUp);
+      clearDAS();
+    };
+  }, [resetBoard, spawnPiece, drop, moveLeft, moveRight, rotate, hardDrop, startDAS, clearDAS]);
 
   useEffect(() => {
     if (gameOver || paused) return;
@@ -1148,18 +1197,7 @@ function TetrisGame({ onBack }: { onBack: () => void }) {
     return () => clearInterval(interval);
   }, [gameOver, paused, drop]);
 
-  const displayBoard = board.map((row, r) => {
-    const cells = [...row];
-    const shp = piece;
-    for (let pr = 0; pr < shp.length; pr++) {
-      for (let pc = 0; pc < shp[pr].length; pc++) {
-        if (shp[pr][pc] && pieceY + pr === r && pieceX + pc >= 0 && pieceX + pc < TETRIS_COLS) {
-          cells[pieceX + pc] = pieceColor;
-        }
-      }
-    }
-    return cells;
-  });
+  const cellSize = "calc(min(100vw, 300px) / 10)";
 
   return (
     <div className="w-full max-w-lg mx-auto px-4 flex flex-col gap-3 pb-16">
@@ -1176,18 +1214,39 @@ function TetrisGame({ onBack }: { onBack: () => void }) {
         <button onClick={() => setPaused(p => { pausedRef.current = !p; return !p; })} className="text-zinc-500 hover:text-white transition-colors cursor-pointer px-2 py-1 rounded hover:bg-white/5 text-[10px] uppercase tracking-wider">{paused ? "Resume" : "Pause"}</button>
       </div>
       <div
-        className="mx-auto border border-white/10 rounded-xl overflow-hidden select-none"
+        className="relative mx-auto border border-white/10 rounded-xl overflow-hidden select-none"
         style={{ width: "min(100%, 300px)", touchAction: "none" }}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
-        {displayBoard.map((row, ri) => (
-          <div key={ri} className="flex" style={{ height: `calc(min(100vw, 300px) / ${TETRIS_COLS})` }}>
+        {board.map((row, ri) => (
+          <div key={ri} className="flex" style={{ height: cellSize }}>
             {row.map((cell, ci) => (
               <div key={ci} className="flex-1 border-[0.5px] border-white/[0.03]" style={{ backgroundColor: cell || "#0b0b0c" }} />
             ))}
           </div>
         ))}
+        {piece.length > 0 && !gameOver && (
+          <div
+            className="absolute top-0 left-0 pointer-events-none"
+            style={{
+              transform: `translate(calc(${pieceX} * ${cellSize}), calc(${pieceY} * ${cellSize}))`,
+              transition: "transform 80ms ease-out",
+            }}
+          >
+            {piece.map((row, r) => (
+              <div key={r} className="flex" style={{ height: cellSize }}>
+                {row.map((cell, c) => (
+                  <div
+                    key={c}
+                    className="flex-1 border-[0.5px] border-white/[0.08]"
+                    style={{ backgroundColor: cell ? pieceColor : "transparent" }}
+                  />
+                ))}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
       <p className="text-center text-[10px] text-zinc-500 font-mono">Swipe or use buttons &middot; P: pause</p>
       {/* Mobile controls */}
@@ -1461,6 +1520,219 @@ function GuessWordGame({ onBack }: { onBack: () => void }) {
   );
 }
 
+interface FlowPuzzle {
+  size: number;
+  pairs: { color: number; start: [number, number]; end: [number, number]; hex: string }[];
+}
+
+const FLOW_PUZZLES: FlowPuzzle[] = [
+  {
+    size: 5,
+    pairs: [
+      { color: 1, start: [0, 1], end: [4, 1], hex: "#ef4444" },
+      { color: 2, start: [0, 3], end: [4, 3], hex: "#3b82f6" },
+    ],
+  },
+  {
+    size: 5,
+    pairs: [
+      { color: 1, start: [0, 0], end: [4, 0], hex: "#ef4444" },
+      { color: 2, start: [0, 2], end: [4, 2], hex: "#22c55e" },
+      { color: 3, start: [0, 4], end: [4, 4], hex: "#a78bfa" },
+    ],
+  },
+  {
+    size: 5,
+    pairs: [
+      { color: 1, start: [0, 0], end: [0, 4], hex: "#ef4444" },
+      { color: 2, start: [4, 0], end: [4, 4], hex: "#eab308" },
+    ],
+  },
+];
+
+function ConnectGame({ onBack }: { onBack: () => void }) {
+  const [puzzleIdx, setPuzzleIdx] = useState(0);
+  const [selectedColor, setSelectedColor] = useState<number | null>(null);
+  const [paths, setPaths] = useState<Map<number, [number, number][]>>(new Map());
+  const [completed, setCompleted] = useState<Set<number>>(new Set());
+  const [win, setWin] = useState(false);
+
+  const puzzle = FLOW_PUZZLES[puzzleIdx];
+
+  const grid = useMemo(() => {
+    const g: number[][] = Array.from({ length: puzzle.size }, () => Array(puzzle.size).fill(0));
+    for (const pair of puzzle.pairs) {
+      g[pair.start[0]][pair.start[1]] = pair.color;
+      g[pair.end[0]][pair.end[1]] = pair.color;
+    }
+    for (const [color, cells] of paths) {
+      for (const [r, c] of cells) {
+        g[r][c] = color;
+      }
+    }
+    return g;
+  }, [puzzle, paths]);
+
+  const pairLookup = useMemo(() => {
+    const map = new Map<number, FlowPuzzle["pairs"][0]>();
+    for (const p of puzzle.pairs) map.set(p.color, p);
+    return map;
+  }, [puzzle]);
+
+  const handleCellClick = (row: number, col: number) => {
+    if (win) return;
+    const val = grid[row][col];
+
+    for (const pair of puzzle.pairs) {
+      if (pair.color === val && !completed.has(pair.color)) {
+        if ((row === pair.start[0] && col === pair.start[1]) ||
+            (row === pair.end[0] && col === pair.end[1])) {
+          setSelectedColor(prev => prev === pair.color ? null : pair.color);
+          playNote(660, 0.1);
+          return;
+        }
+      }
+    }
+
+    if (selectedColor !== null) {
+      const currentCells = paths.get(selectedColor) || [];
+      const pair = pairLookup.get(selectedColor)!;
+      const lastCell = currentCells.length > 0
+        ? currentCells[currentCells.length - 1]
+        : pair.start;
+
+      if (row === lastCell[0] && col === lastCell[1]) {
+        const newCells = currentCells.slice(0, -1);
+        const newPaths = new Map(paths);
+        if (newCells.length === 0) newPaths.delete(selectedColor);
+        else newPaths.set(selectedColor, newCells);
+        setPaths(newPaths);
+        playNote(440, 0.08);
+        return;
+      }
+
+      const dr = Math.abs(row - lastCell[0]);
+      const dc = Math.abs(col - lastCell[1]);
+      if ((dr === 1 && dc === 0) || (dr === 0 && dc === 1)) {
+        if (grid[row][col] === 0 || (row === pair.end[0] && col === pair.end[1])) {
+          const newCells = [...currentCells, [row, col] as [number, number]];
+
+          if (row === pair.end[0] && col === pair.end[1]) {
+            const newPaths = new Map(paths);
+            newPaths.set(pair.color, newCells);
+            setPaths(newPaths);
+            const newCompleted = new Set(completed);
+            newCompleted.add(pair.color);
+            setCompleted(newCompleted);
+            setSelectedColor(null);
+            playNote(440, 0.25);
+            if (newCompleted.size === puzzle.pairs.length) {
+              setTimeout(() => {
+                playNote(523, 0.15);
+                setTimeout(() => playNote(659, 0.15), 150);
+                setTimeout(() => playNote(784, 0.2), 300);
+              }, 100);
+              setWin(true);
+            }
+          } else {
+            const newPaths = new Map(paths);
+            newPaths.set(pair.color, newCells);
+            setPaths(newPaths);
+            playNote(880, 0.06);
+          }
+        }
+      }
+    }
+  };
+
+  const nextPuzzle = () => {
+    const next = (puzzleIdx + 1) % FLOW_PUZZLES.length;
+    setPuzzleIdx(next);
+    setSelectedColor(null);
+    setPaths(new Map());
+    setCompleted(new Set());
+    setWin(false);
+  };
+
+  const resetPuzzle = () => {
+    setSelectedColor(null);
+    setPaths(new Map());
+    setCompleted(new Set());
+    setWin(false);
+  };
+
+  const cellSize = `calc(min(80vw, 320px) / ${puzzle.size})`;
+
+  return (
+    <div className="w-full max-w-lg mx-auto px-4 flex flex-col gap-4 pb-16">
+      <div className="flex items-center gap-3 pt-4">
+        <button onClick={onBack} className="p-2 text-zinc-400 hover:text-white hover:bg-white/5 rounded-lg transition-all cursor-pointer"><ArrowLeft className="w-5 h-5" /></button>
+        <div>
+          <span className="text-[var(--accent)] font-mono text-[10px] font-bold tracking-[0.25em] uppercase">Mindful Play</span>
+          <h2 className="font-serif text-2xl font-normal text-white leading-tight">Connect the Dots</h2>
+        </div>
+      </div>
+      <div className="flex items-center justify-between text-xs font-mono text-zinc-400 px-1">
+        <span>Puzzle {puzzleIdx + 1}/{FLOW_PUZZLES.length}</span>
+        <span>{completed.size}/{puzzle.pairs.length} connected</span>
+        <button onClick={resetPuzzle} className="text-zinc-500 hover:text-white transition-colors cursor-pointer px-2 py-1 rounded hover:bg-white/5 text-[10px] uppercase tracking-wider"><RotateCcw className="w-3 h-3 inline mr-1" />Reset</button>
+      </div>
+      <div
+        className="mx-auto border border-white/10 rounded-xl overflow-hidden select-none"
+        style={{ width: "min(100%, 320px)", touchAction: "none" }}
+      >
+        {Array.from({ length: puzzle.size }, (_, ri) => (
+          <div key={ri} className="flex" style={{ height: cellSize }}>
+            {Array.from({ length: puzzle.size }, (_, ci) => {
+              const val = grid[ri][ci];
+              const isDot = puzzle.pairs.some(p =>
+                (p.start[0] === ri && p.start[1] === ci) ||
+                (p.end[0] === ri && p.end[1] === ci)
+              );
+              const pair = puzzle.pairs.find(p => p.color === val);
+              const hex = pair?.hex || "#1a1a1a";
+              const isSelected = selectedColor === val && isDot;
+              return (
+                <div
+                  key={ci}
+                  onClick={() => handleCellClick(ri, ci)}
+                  className="flex-1 border-[0.5px] border-white/[0.03] flex items-center justify-center cursor-pointer transition-colors duration-100"
+                  style={{
+                    backgroundColor: val === 0 ? "#0b0b0c" : `${hex}22`,
+                  }}
+                >
+                  {isDot && (
+                    <div
+                      className="rounded-full transition-all duration-200"
+                      style={{
+                        width: isSelected ? "80%" : "60%",
+                        height: isSelected ? "80%" : "60%",
+                        backgroundColor: hex,
+                        boxShadow: isSelected ? `0 0 12px ${hex}80` : "none",
+                      }}
+                    />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+      {selectedColor !== null && (
+        <p className="text-center text-[10px] text-zinc-400 font-mono">
+          Tap adjacent cells to draw path · Tap last cell to undo
+        </p>
+      )}
+      {win && (
+        <div className="flex flex-col items-center gap-3 mt-2">
+          <p className="text-sm text-[var(--accent)] font-mono font-bold">All connected!</p>
+          <button onClick={nextPuzzle} className="bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-zinc-950 font-mono text-[10px] font-bold uppercase tracking-[0.2em] px-8 py-3 rounded hover:shadow-[0_0_30px_rgba(var(--accent-rgb),0.4)] transition-all active:scale-95 cursor-pointer">Next Puzzle</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function GamesView() {
   const [activeGame, setActiveGame] = useState<string | null>(null);
 
@@ -1490,6 +1762,10 @@ export default function GamesView() {
 
   if (activeGame === "guess-word") {
     return <GuessWordGame onBack={() => setActiveGame(null)} />;
+  }
+
+  if (activeGame === "connect-dots") {
+    return <ConnectGame onBack={() => setActiveGame(null)} />;
   }
 
   return (

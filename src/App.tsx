@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import Header from "./components/Header";
 import NavigationDrawer from "./components/NavigationDrawer";
 import BottomNavBar, { TabId } from "./components/BottomNavBar";
@@ -21,6 +21,48 @@ import { MindsetId, RitualItem, SettingsConfig, UserProfile } from "./types";
 import OnboardingModal from "./components/OnboardingModal";
 import { getMood } from "./themes";
 import { getQuoteForMindset } from "./quotes";
+
+function StarField() {
+  const stars = useMemo(() => {
+    const result: { left: number; top: number; size: number; delay: number; duration: number; baseOpacity: number }[] = [];
+    for (let i = 0; i < 60; i++) {
+      result.push({
+        left: Math.random() * 100,
+        top: Math.random() * 100,
+        size: Math.random() * 1.5 + 0.5,
+        delay: Math.random() * 5,
+        duration: Math.random() * 3 + 3,
+        baseOpacity: Math.random() * 0.2 + 0.08,
+      });
+    }
+    return result;
+  }, []);
+
+  return (
+    <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+      {stars.map((s, i) => (
+        <div
+          key={i}
+          className="absolute rounded-full bg-white"
+          style={{
+            left: `${s.left}%`,
+            top: `${s.top}%`,
+            width: `${s.size}px`,
+            height: `${s.size}px`,
+            opacity: s.baseOpacity,
+            animation: `star-pulse ${s.duration}s ${s.delay}s infinite alternate ease-in-out`,
+          }}
+        />
+      ))}
+      <style>{`
+        @keyframes star-pulse {
+          0% { opacity: 0.05; }
+          100% { opacity: 0.25; }
+        }
+      `}</style>
+    </div>
+  );
+}
 
 export default function App() {
   // Navigation states
@@ -332,6 +374,9 @@ export default function App() {
         <OnboardingModal onComplete={handleProfileComplete} />
       )}
       <div className="min-h-screen bg-[#050505] text-[#e5e2e1] pb-32">
+      {/* Night sky stars background */}
+      <StarField />
+
       {/* Decorative ambient gold sky glow simulated inside margins */}
       <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[550px] h-[550px] bg-[#f2ca50]/[0.02] rounded-full blur-[120px] pointer-events-none -z-10" />
 

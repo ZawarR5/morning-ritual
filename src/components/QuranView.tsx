@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { X, BookOpen } from "lucide-react";
+import { X, BookOpen, Search } from "lucide-react";
 import { SURAHS } from "../data/demo/quran-surahs";
 
 interface VerseItem { chapter: number; verse: number; text: string; }
@@ -90,6 +90,18 @@ function SurahList({ surahs, arMap, bookmark, onSelect }: {
   bookmark: { surah: number; ayah: number } | null;
   onSelect: (id: number) => void;
 }) {
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filtered = useMemo(() => {
+    if (!searchQuery.trim()) return surahs;
+    const q = searchQuery.toLowerCase();
+    return surahs.filter(s =>
+      s.name.toLowerCase().includes(q) ||
+      s.arabic.includes(searchQuery) ||
+      s.id.toString() === q
+    );
+  }, [surahs, searchQuery]);
+
   const totalVerses = useMemo(() => {
     let count = 0;
     for (const v of arMap.values()) count += v.length;
@@ -114,8 +126,24 @@ function SurahList({ surahs, arMap, bookmark, onSelect }: {
         )}
       </div>
 
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+          placeholder="Search surahs by name..."
+          className="w-full bg-white/[0.03] border border-white/10 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder-zinc-500 focus:outline-none focus:border-[var(--accent)]/40 focus:bg-white/[0.05] transition-all"
+        />
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-        {surahs.map(s => {
+        {filtered.length === 0 && (
+          <div className="col-span-full text-center py-12">
+            <p className="text-zinc-500 text-sm">No surahs found matching "{searchQuery}"</p>
+          </div>
+        )}
+        {filtered.map(s => {
           const count = arMap.get(s.id)?.length || 0;
           const isBookmarked = bookmark?.surah === s.id;
           return (

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import { Play, Pause, ChevronRight } from "lucide-react";
 import { QUL_SURAHS } from "../data/quran";
 
@@ -89,11 +89,49 @@ export default function FourQulView({ onFinish }: FourQulViewProps) {
     return `${m}:${s.toString().padStart(2, "0")}`;
   };
 
+  const fourKulStars = useMemo(() => {
+    const s: { left: number; top: number; size: number; delay: number; duration: number; baseOpacity: number }[] = [];
+    for (let i = 0; i < 40; i++) {
+      s.push({
+        left: Math.random() * 100,
+        top: Math.random() * 100,
+        size: Math.random() * 1.5 + 0.5,
+        delay: Math.random() * 5,
+        duration: Math.random() * 3 + 3,
+        baseOpacity: Math.random() * 0.18 + 0.06,
+      });
+    }
+    return s;
+  }, []);
+
   return (
     <div
       key={currentSurahIdx}
-      className="fixed inset-0 z-[120] bg-[#0b0b0c] text-[#e5e2e1] flex flex-col"
+      className="fixed inset-0 z-40 bg-[#0b0b0c] text-[#e5e2e1] flex flex-col pb-24"
     >
+      {/* Stars background */}
+      <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
+        {fourKulStars.map((s, i) => (
+          <div
+            key={i}
+            className="absolute rounded-full bg-white"
+            style={{
+              left: `${s.left}%`,
+              top: `${s.top}%`,
+              width: `${s.size}px`,
+              height: `${s.size}px`,
+              opacity: s.baseOpacity,
+              animation: `star-pulse-4kul ${s.duration}s ${s.delay}s infinite alternate ease-in-out`,
+            }}
+          />
+        ))}
+        <style>{`
+          @keyframes star-pulse-4kul {
+            0% { opacity: 0.04; }
+            100% { opacity: 0.22; }
+          }
+        `}</style>
+      </div>
       <div className="absolute inset-x-0 top-0 h-1/2 bg-gradient-to-b from-[var(--accent)]/5 to-transparent pointer-events-none -z-10" />
 
       {/* Header */}
@@ -202,7 +240,7 @@ export default function FourQulView({ onFinish }: FourQulViewProps) {
       </div>
 
       {/* News ticker */}
-      <div className="w-full bg-white/10 border-t border-white/15 overflow-hidden h-14 flex items-center">
+      <div className="w-full bg-white/[0.05] border-t border-white/[0.08] overflow-hidden h-11 flex items-center">
         <div className="ticker-track whitespace-nowrap">
           <span>{surah.tickerText}</span>
           <span>{surah.tickerText}</span>
@@ -213,14 +251,14 @@ export default function FourQulView({ onFinish }: FourQulViewProps) {
         .ticker-track {
           display: flex;
           white-space: nowrap;
-          animation: ticker-scroll 45s linear infinite;
+          animation: ticker-scroll 55s linear infinite;
         }
         .ticker-track span {
           padding-right: 6rem;
-          font-size: 1rem;
-          color: #d4d4d8;
-          font-weight: 500;
-          line-height: 3.5rem;
+          font-size: 0.8125rem;
+          color: #a1a1aa;
+          font-weight: 400;
+          line-height: 2.75rem;
           white-space: nowrap;
         }
         @keyframes ticker-scroll {
