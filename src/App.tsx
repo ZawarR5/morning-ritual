@@ -486,7 +486,7 @@ export default function App() {
       </a>
 
       {/* Persistent Bottom navigation menu bar */}
-      <BottomNavBar activeTab={activeTab} onTabChange={setActiveTab} />
+      {!isDrawerOpen && !showQuran && !showHadith && <BottomNavBar activeTab={activeTab} onTabChange={setActiveTab} />}
     </div>
     </>
   );
