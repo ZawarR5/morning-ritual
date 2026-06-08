@@ -577,7 +577,7 @@ export default function App() {
       </a>
 
       {/* Persistent Bottom navigation menu bar */}
-      <div className={!isDrawerOpen && !showQuran && !showHadith ? "" : "hidden"}>
+      <div className={!isDrawerOpen && !showQuran && !showHadith && !showSecret ? "" : "hidden"}>
         <BottomNavBar activeTab={activeTab} onTabChange={handleTabChange} />
       </div>
     </div>
