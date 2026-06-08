@@ -7,6 +7,7 @@ import PrayerTrackerView from "./components/RitualsView";
 import BreathworkSession from "./components/BreathworkSession";
 import NotificationToast from "./components/NotificationToast";
 import QuietMindView from "./components/QuietMindView";
+import { motion, AnimatePresence } from "motion/react";
 
 import {
   DEFAULT_MINDSETS,
@@ -17,6 +18,7 @@ import FourQulView from "./components/FourQulView";
 import GamesView from "./components/GamesView";
 import QuranView from "./components/QuranView";
 import HadithView from "./components/HadithView";
+import SecretView from "./components/SecretView";
 import { MindsetId, RitualItem, SettingsConfig, UserProfile } from "./types";
 import OnboardingModal from "./components/OnboardingModal";
 import { getMood } from "./themes";
@@ -67,12 +69,23 @@ function StarField() {
 export default function App() {
   // Navigation states
   const [activeTab, setActiveTab] = useState<TabId>("today");
+  const [direction, setDirection] = useState(1);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isBreathworkActive, setIsBreathworkActive] = useState(false);
   const [showQuran, setShowQuran] = useState(false);
   const [showHadith, setShowHadith] = useState(false);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
+  const [showSecret, setShowSecret] = useState(false);
   const previousTab = useRef<TabId>("today");
+
+  const TAB_ORDER: TabId[] = ["today", "rituals", "quiet", "4kul", "games"];
+
+  const handleTabChange = useCallback((tab: TabId) => {
+    const prevIdx = TAB_ORDER.indexOf(activeTab);
+    const nextIdx = TAB_ORDER.indexOf(tab);
+    setDirection(nextIdx > prevIdx ? 1 : -1);
+    setActiveTab(tab);
+  }, [activeTab]);
 
   // Android / mobile back button handler
   useEffect(() => {
@@ -86,6 +99,7 @@ export default function App() {
       if (isDrawerOpen) { setIsDrawerOpen(false); return; }
       if (showQuran) { setShowQuran(false); return; }
       if (showHadith) { setShowHadith(false); return; }
+      if (showSecret) { setShowSecret(false); return; }
       if (isBreathworkActive) { setIsBreathworkActive(false); return; }
       if (activeTab !== "today") { setActiveTab("today"); return; }
       setShowExitConfirm(true);
@@ -100,6 +114,7 @@ export default function App() {
         if (isDrawerOpen) { setIsDrawerOpen(false); return; }
         if (showQuran) { setShowQuran(false); return; }
         if (showHadith) { setShowHadith(false); return; }
+        if (showSecret) { setShowSecret(false); return; }
         if (isBreathworkActive) { setIsBreathworkActive(false); return; }
         if (activeTab !== "today") { setActiveTab("today"); return; }
         setShowExitConfirm(true);
@@ -109,7 +124,7 @@ export default function App() {
     return () => {
       window.removeEventListener("popstate", handlePopState);
     };
-  }, [isDrawerOpen, showQuran, showHadith, isBreathworkActive, activeTab]);
+  }, [isDrawerOpen, showQuran, showHadith, showSecret, isBreathworkActive, activeTab]);
 
   // Track previous tab for back navigation
   useEffect(() => {
@@ -396,6 +411,7 @@ export default function App() {
         onMoodChange={setMood}
         onOpenQuran={() => setShowQuran(true)}
         onOpenHadith={() => setShowHadith(true)}
+        onOpenSecret={() => setShowSecret(true)}
       />
 
       {/* Morning notification toast */}
@@ -415,38 +431,113 @@ export default function App() {
         />
       )}
 
-      {/* Primary views section switcher */}
+      {/* Primary views section switcher with directional swipe */}
       <main className="pt-24 px-4 max-w-7xl mx-auto">
-        {activeTab === "today" && (
-          <TodayView
-            quoteText={activeQuote.text}
-            quoteEmoji={activeQuote.emoji}
-            quoteCategory={activeQuote.category}
-            rituals={rituals}
-            onToggleRitual={handleToggleRitual}
-            onAddRitual={handleAddRitual}
-            onDeleteRitual={handleDeleteRitual}
-            onStartBreathwork={() => setIsBreathworkActive(true)}
-          />
-        )}
+        <AnimatePresence mode="wait" custom={direction}>
+          {activeTab === "today" && (
+            <motion.div
+              key="today"
+              custom={direction}
+              variants={{
+                enter: (dir: number) => ({ x: dir * 80, opacity: 0 }),
+                center: { x: 0, opacity: 1 },
+                exit: (dir: number) => ({ x: dir * -80, opacity: 0 }),
+              }}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: 0.18, ease: "easeOut" }}
+            >
+              <TodayView
+                quoteText={activeQuote.text}
+                quoteEmoji={activeQuote.emoji}
+                quoteCategory={activeQuote.category}
+                rituals={rituals}
+                onToggleRitual={handleToggleRitual}
+                onAddRitual={handleAddRitual}
+                onDeleteRitual={handleDeleteRitual}
+                onStartBreathwork={() => setIsBreathworkActive(true)}
+              />
+            </motion.div>
+          )}
 
-        {activeTab === "rituals" && (
-          <PrayerTrackerView />
-        )}
+          {activeTab === "rituals" && (
+            <motion.div
+              key="rituals"
+              custom={direction}
+              variants={{
+                enter: (dir: number) => ({ x: dir * 80, opacity: 0 }),
+                center: { x: 0, opacity: 1 },
+                exit: (dir: number) => ({ x: dir * -80, opacity: 0 }),
+              }}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: 0.18, ease: "easeOut" }}
+            >
+              <PrayerTrackerView />
+            </motion.div>
+          )}
 
-        {activeTab === "quiet" && (
-          <QuietMindView />
-        )}
+          {activeTab === "quiet" && (
+            <motion.div
+              key="quiet"
+              custom={direction}
+              variants={{
+                enter: (dir: number) => ({ x: dir * 80, opacity: 0 }),
+                center: { x: 0, opacity: 1 },
+                exit: (dir: number) => ({ x: dir * -80, opacity: 0 }),
+              }}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: 0.18, ease: "easeOut" }}
+            >
+              <QuietMindView />
+            </motion.div>
+          )}
 
-        {activeTab === "4kul" && (
-          <FourQulView onFinish={() => setActiveTab("today")} />
-        )}
+          {activeTab === "4kul" && (
+            <motion.div
+              key="4kul"
+              custom={direction}
+              variants={{
+                enter: (dir: number) => ({ x: dir * 80, opacity: 0 }),
+                center: { x: 0, opacity: 1 },
+                exit: (dir: number) => ({ x: dir * -80, opacity: 0 }),
+              }}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: 0.18, ease: "easeOut" }}
+            >
+              <FourQulView onFinish={() => setActiveTab("today")} />
+            </motion.div>
+          )}
 
-        {activeTab === "games" && <GamesView />}
+          {activeTab === "games" && (
+            <motion.div
+              key="games"
+              custom={direction}
+              variants={{
+                enter: (dir: number) => ({ x: dir * 80, opacity: 0 }),
+                center: { x: 0, opacity: 1 },
+                exit: (dir: number) => ({ x: dir * -80, opacity: 0 }),
+              }}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: 0.18, ease: "easeOut" }}
+            >
+              <GamesView />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </main>
 
       {showQuran && <QuranView onClose={() => setShowQuran(false)} />}
       {showHadith && <HadithView onClose={() => setShowHadith(false)} />}
+      {showSecret && <SecretView onClose={() => setShowSecret(false)} />}
 
       {/* Exit confirmation dialog for Android back on home screen */}
       {showExitConfirm && (
@@ -486,7 +577,7 @@ export default function App() {
       </a>
 
       {/* Persistent Bottom navigation menu bar */}
-      {!isDrawerOpen && !showQuran && !showHadith && <BottomNavBar activeTab={activeTab} onTabChange={setActiveTab} />}
+      {!isDrawerOpen && !showQuran && !showHadith && <BottomNavBar activeTab={activeTab} onTabChange={handleTabChange} />}
     </div>
     </>
   );

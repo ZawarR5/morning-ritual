@@ -105,12 +105,9 @@ export default function FourQulView({ onFinish }: FourQulViewProps) {
   }, []);
 
   return (
-    <div
-      key={currentSurahIdx}
-      className="fixed inset-0 z-40 bg-[#0b0b0c] text-[#e5e2e1] flex flex-col pb-24"
-    >
+    <div className="bg-[#0b0b0c] text-[#e5e2e1] flex flex-col min-h-[calc(100vh-8rem)] pb-4 rounded-2xl overflow-hidden relative">
       {/* Stars background */}
-      <div className="absolute inset-0 pointer-events-none z-0 overflow-hidden">
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
         {fourKulStars.map((s, i) => (
           <div
             key={i}

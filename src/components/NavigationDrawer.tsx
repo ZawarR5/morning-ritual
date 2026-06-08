@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { X, User, Flame, HelpCircle, Camera, Pencil, StickyNote, ChevronDown, BookOpen, MessageCircle } from "lucide-react";
+import { X, User, Flame, HelpCircle, Camera, Pencil, StickyNote, ChevronDown, BookOpen, MessageCircle, Lock } from "lucide-react";
 import NotesView from "./NotesView";
 import { UserProfile } from "../types";
 import { moods } from "../themes";
@@ -17,6 +17,7 @@ interface NavigationDrawerProps {
   onMoodChange: (mood: string) => void;
   onOpenQuran?: () => void;
   onOpenHadith?: () => void;
+  onOpenSecret?: () => void;
 }
 
 export default function NavigationDrawer({
@@ -31,6 +32,7 @@ export default function NavigationDrawer({
   onMoodChange,
   onOpenQuran,
   onOpenHadith,
+  onOpenSecret,
 }: NavigationDrawerProps) {
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState(profile?.name || "");
@@ -253,6 +255,16 @@ export default function NavigationDrawer({
               >
                 <BookOpen className="w-5 h-5 text-[var(--accent)]" />
                 <span className="font-sans text-sm font-medium">Quran</span>
+              </button>
+            )}
+
+            {onOpenSecret && (
+              <button
+                onClick={() => { onOpenSecret(); onClose(); }}
+                className="flex items-center gap-4 p-3 rounded-xl text-zinc-300 hover:bg-white/5 transition-colors w-full text-left cursor-pointer mb-2"
+              >
+                <Lock className="w-5 h-5 text-[var(--accent)]" />
+                <span className="font-sans text-sm font-medium">Secret</span>
               </button>
             )}
 

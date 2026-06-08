@@ -1230,6 +1230,7 @@ function TetrisGame({ onBack }: { onBack: () => void }) {
           <div
             className="absolute top-0 left-0 pointer-events-none"
             style={{
+              width: `calc(${Math.max(...piece.map(r => r.length))} * ${cellSize})`,
               transform: `translate(calc(${pieceX} * ${cellSize}), calc(${pieceY} * ${cellSize}))`,
               transition: "transform 80ms ease-out",
             }}
@@ -1520,146 +1521,292 @@ function GuessWordGame({ onBack }: { onBack: () => void }) {
   );
 }
 
+// === Connect the Dots — Puzzle Generator ===
+
 interface FlowPuzzle {
   size: number;
   pairs: { color: number; start: [number, number]; end: [number, number]; hex: string }[];
 }
 
-const FLOW_PUZZLES: FlowPuzzle[] = [
-  {
-    size: 5,
-    pairs: [
-      { color: 1, start: [0, 1], end: [4, 1], hex: "#ef4444" },
-      { color: 2, start: [0, 3], end: [4, 3], hex: "#3b82f6" },
-    ],
-  },
-  {
-    size: 5,
-    pairs: [
-      { color: 1, start: [0, 0], end: [4, 0], hex: "#ef4444" },
-      { color: 2, start: [0, 2], end: [4, 2], hex: "#22c55e" },
-      { color: 3, start: [0, 4], end: [4, 4], hex: "#a78bfa" },
-    ],
-  },
-  {
-    size: 5,
-    pairs: [
-      { color: 1, start: [0, 0], end: [0, 4], hex: "#ef4444" },
-      { color: 2, start: [4, 0], end: [4, 4], hex: "#eab308" },
-    ],
-  },
+const DOT_COLORS = [
+  { color: 1, hex: "#ef4444" },
+  { color: 2, hex: "#3b82f6" },
+  { color: 3, hex: "#22c55e" },
+  { color: 4, hex: "#eab308" },
+  { color: 5, hex: "#a78bfa" },
+  { color: 6, hex: "#f97316" },
+  { color: 7, hex: "#14b8a6" },
+  { color: 8, hex: "#ec4899" },
+  { color: 9, hex: "#8b5cf6" },
+  { color: 10, hex: "#f43f5e" },
 ];
 
+const TOTAL_DOTS_LEVELS = 50;
+
+function getLevelParams(level: number): { size: number; numColors: number } {
+  // Harder every 5 levels, more dots every 10 levels
+  if (level <= 5) return { size: 5, numColors: 2 };
+  if (level <= 10) return { size: 5, numColors: 3 };
+  if (level <= 15) return { size: 6, numColors: 3 };
+  if (level <= 20) return { size: 6, numColors: 4 };
+  if (level <= 25) return { size: 6, numColors: 5 };
+  if (level <= 30) return { size: 7, numColors: 4 };
+  if (level <= 35) return { size: 7, numColors: 5 };
+  if (level <= 40) return { size: 7, numColors: 6 };
+  if (level <= 45) return { size: 8, numColors: 5 };
+  return { size: 8, numColors: 6 };
+}
+
+function findPath(
+  grid: number[][],
+  start: [number, number],
+  end: [number, number],
+  size: number
+): [number, number][] | null {
+  if (start[0] === end[0] && start[1] === end[1]) return null;
+  const visited = new Set<string>();
+  visited.add(`${start[0]},${start[1]}`);
+
+  function dfs(pos: [number, number]): [number, number][] | null {
+    if (pos[0] === end[0] && pos[1] === end[1]) return [];
+    const dirs: [number, number][] = [[-1,0],[1,0],[0,-1],[0,1]];
+    for (const [dr, dc] of shuffle(dirs)) {
+      const nr = pos[0] + dr;
+      const nc = pos[1] + dc;
+      const key = `${nr},${nc}`;
+      if (nr < 0 || nr >= size || nc < 0 || nc >= size) continue;
+      if (visited.has(key)) continue;
+      if (grid[nr][nc] !== 0 && !(nr === end[0] && nc === end[1])) continue;
+      visited.add(key);
+      const subPath = dfs([nr, nc]);
+      if (subPath !== null) return [[nr, nc], ...subPath];
+    }
+    return null;
+  }
+
+  return dfs(start);
+}
+
+function tryGenerate(size: number, numColors: number, minDist = 3): FlowPuzzle | null {
+  const grid: number[][] = Array.from({ length: size }, () => Array(size).fill(0));
+  const pairs: FlowPuzzle["pairs"] = [];
+  for (const colorInfo of shuffle(DOT_COLORS.slice(0, numColors))) {
+    const emptyCells: [number, number][] = [];
+    for (let r = 0; r < size; r++)
+      for (let c = 0; c < size; c++)
+        if (grid[r][c] === 0) emptyCells.push([r, c]);
+    if (emptyCells.length < 2) return null;
+    const shuffled = shuffle(emptyCells);
+    let found = false;
+    for (let i = 0; i < Math.min(shuffled.length, 20) && !found; i++) {
+      for (let j = i + 1; j < Math.min(shuffled.length, i + 20) && !found; j++) {
+        const start = shuffled[i];
+        const end = shuffled[j];
+        if (Math.abs(start[0] - end[0]) + Math.abs(start[1] - end[1]) < minDist) continue;
+        const path = findPath(grid, start, end, size);
+        if (path) {
+          grid[start[0]][start[1]] = colorInfo.color;
+          grid[end[0]][end[1]] = colorInfo.color;
+          for (const [r, c] of path) grid[r][c] = colorInfo.color;
+          pairs.push({ color: colorInfo.color, start: [start[0], start[1]], end: [end[0], end[1]], hex: colorInfo.hex });
+          found = true;
+        }
+      }
+    }
+    if (!found) return null;
+  }
+  return { size, pairs };
+}
+
+function generatePuzzle(level: number): FlowPuzzle {
+  let lvl = Math.max(1, level);
+  const minDist = level <= 10 ? 3 : level <= 25 ? 4 : 5;
+  for (let attempt = 0; attempt < 100; attempt++) {
+    const { size, numColors } = getLevelParams(lvl);
+    const p = tryGenerate(size, numColors, minDist);
+    if (p) return p;
+  }
+  if (lvl > 1) { const { size, numColors } = getLevelParams(lvl); const p = tryGenerate(size, Math.max(2, numColors - 1), minDist); if (p) return p; }
+  return { size: 5, pairs: [{ color: 1, start: [0, 1], end: [4, 1], hex: "#ef4444" }, { color: 2, start: [0, 3], end: [4, 3], hex: "#3b82f6" }] };
+}
+
 function ConnectGame({ onBack }: { onBack: () => void }) {
-  const [puzzleIdx, setPuzzleIdx] = useState(0);
-  const [selectedColor, setSelectedColor] = useState<number | null>(null);
+  const [level, setLevel] = useState(1);
+  const [puzzle, setPuzzle] = useState<FlowPuzzle | null>(null);
   const [paths, setPaths] = useState<Map<number, [number, number][]>>(new Map());
   const [completed, setCompleted] = useState<Set<number>>(new Set());
-  const [win, setWin] = useState(false);
+  const [selectedColor, setSelectedColor] = useState<number | null>(null);
+  const [originDot, setOriginDot] = useState<'start' | 'end' | null>(null);
+  const [won, setWon] = useState(false);
+  const [showLevelSelect, setShowLevelSelect] = useState(false);
+  const [clearedLevels, setClearedLevels] = useState<Set<number>>(() => {
+    try { const s = localStorage.getItem("mr_dots_cleared"); return s ? new Set(JSON.parse(s)) : new Set(); } catch { return new Set(); }
+  });
 
-  const puzzle = FLOW_PUZZLES[puzzleIdx];
+  const initLevel = useCallback((lvl: number) => {
+    const p = generatePuzzle(lvl);
+    setPuzzle(p);
+    setPaths(new Map());
+    setCompleted(new Set());
+    setSelectedColor(null);
+    setOriginDot(null);
+    setWon(false);
+  }, []);
+
+  useEffect(() => { initLevel(level); }, [level, initLevel]);
+
+  useEffect(() => {
+    if (won) {
+      const next = new Set(clearedLevels);
+      next.add(level);
+      setClearedLevels(next);
+      localStorage.setItem("mr_dots_cleared", JSON.stringify([...next]));
+    }
+  }, [won]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const grid = useMemo(() => {
+    if (!puzzle) return [];
     const g: number[][] = Array.from({ length: puzzle.size }, () => Array(puzzle.size).fill(0));
     for (const pair of puzzle.pairs) {
       g[pair.start[0]][pair.start[1]] = pair.color;
       g[pair.end[0]][pair.end[1]] = pair.color;
     }
     for (const [color, cells] of paths) {
-      for (const [r, c] of cells) {
-        g[r][c] = color;
-      }
+      for (const [r, c] of cells) g[r][c] = color;
     }
     return g;
   }, [puzzle, paths]);
 
-  const pairLookup = useMemo(() => {
-    const map = new Map<number, FlowPuzzle["pairs"][0]>();
-    for (const p of puzzle.pairs) map.set(p.color, p);
-    return map;
-  }, [puzzle]);
-
-  const handleCellClick = (row: number, col: number) => {
-    if (win) return;
+  const handleCellClick = useCallback((row: number, col: number) => {
+    if (won || !puzzle) return;
     const val = grid[row][col];
+    const clickedPair = val === 0 ? undefined : puzzle.pairs.find(p => p.color === val);
+    const isStart = clickedPair && row === clickedPair.start[0] && col === clickedPair.start[1];
+    const isEnd = clickedPair && row === clickedPair.end[0] && col === clickedPair.end[1];
+    const isDot = isStart || isEnd;
 
-    for (const pair of puzzle.pairs) {
-      if (pair.color === val && !completed.has(pair.color)) {
-        if ((row === pair.start[0] && col === pair.start[1]) ||
-            (row === pair.end[0] && col === pair.end[1])) {
-          setSelectedColor(prev => prev === pair.color ? null : pair.color);
-          playNote(660, 0.1);
+    // If a color is selected and we click the other dot of that pair → complete
+    if (selectedColor !== null && originDot !== null && clickedPair && clickedPair.color === selectedColor && !completed.has(selectedColor)) {
+      const pair = puzzle.pairs.find(p => p.color === selectedColor)!;
+      const origin = originDot === 'start' ? pair.start : pair.end;
+      const otherDot = originDot === 'start' ? pair.end : pair.start;
+      if (row === otherDot[0] && col === otherDot[1]) {
+        const currentCells = paths.get(selectedColor) || [];
+        const lastCell = currentCells.length > 0 ? currentCells[currentCells.length - 1] : origin;
+        const dr = Math.abs(row - lastCell[0]);
+        const dc = Math.abs(col - lastCell[1]);
+        if ((dr === 1 && dc === 0) || (dr === 0 && dc === 1)) {
+          const newCells = [...currentCells, [row, col] as [number, number]];
+          const newPaths = new Map(paths);
+          newPaths.set(selectedColor, newCells);
+          setPaths(newPaths);
+          const nextCompleted = new Set(completed);
+          nextCompleted.add(selectedColor);
+          setCompleted(nextCompleted);
+          setSelectedColor(null);
+          setOriginDot(null);
+          playNote(440, 0.25);
+          if (nextCompleted.size === puzzle.pairs.length) {
+            setTimeout(() => { playNote(523, 0.15); setTimeout(() => playNote(659, 0.15), 150); setTimeout(() => playNote(784, 0.2), 300); }, 100);
+            setWon(true);
+          }
           return;
         }
       }
     }
 
-    if (selectedColor !== null) {
-      const currentCells = paths.get(selectedColor) || [];
-      const pair = pairLookup.get(selectedColor)!;
-      const lastCell = currentCells.length > 0
-        ? currentCells[currentCells.length - 1]
-        : pair.start;
-
-      if (row === lastCell[0] && col === lastCell[1]) {
-        const newCells = currentCells.slice(0, -1);
-        const newPaths = new Map(paths);
-        if (newCells.length === 0) newPaths.delete(selectedColor);
-        else newPaths.set(selectedColor, newCells);
-        setPaths(newPaths);
-        playNote(440, 0.08);
-        return;
+    // Click any uncompleted dot → toggle selection for that color
+    if (isDot && clickedPair && !completed.has(clickedPair.color)) {
+      if (selectedColor === clickedPair.color) {
+        setSelectedColor(null);
+        setOriginDot(null);
+      } else {
+        setSelectedColor(clickedPair.color);
+        setOriginDot(isStart ? 'start' : 'end');
+        playNote(660, 0.1);
       }
-
-      const dr = Math.abs(row - lastCell[0]);
-      const dc = Math.abs(col - lastCell[1]);
-      if ((dr === 1 && dc === 0) || (dr === 0 && dc === 1)) {
-        if (grid[row][col] === 0 || (row === pair.end[0] && col === pair.end[1])) {
-          const newCells = [...currentCells, [row, col] as [number, number]];
-
-          if (row === pair.end[0] && col === pair.end[1]) {
-            const newPaths = new Map(paths);
-            newPaths.set(pair.color, newCells);
-            setPaths(newPaths);
-            const newCompleted = new Set(completed);
-            newCompleted.add(pair.color);
-            setCompleted(newCompleted);
-            setSelectedColor(null);
-            playNote(440, 0.25);
-            if (newCompleted.size === puzzle.pairs.length) {
-              setTimeout(() => {
-                playNote(523, 0.15);
-                setTimeout(() => playNote(659, 0.15), 150);
-                setTimeout(() => playNote(784, 0.2), 300);
-              }, 100);
-              setWin(true);
-            }
-          } else {
-            const newPaths = new Map(paths);
-            newPaths.set(pair.color, newCells);
-            setPaths(newPaths);
-            playNote(880, 0.06);
-          }
-        }
-      }
+      return;
     }
-  };
 
-  const nextPuzzle = () => {
-    const next = (puzzleIdx + 1) % FLOW_PUZZLES.length;
-    setPuzzleIdx(next);
-    setSelectedColor(null);
+    if (selectedColor === null || originDot === null) return;
+    const pair = puzzle.pairs.find(p => p.color === selectedColor)!;
+    if (completed.has(pair.color)) { setSelectedColor(null); setOriginDot(null); return; }
+
+    const currentCells = paths.get(selectedColor) || [];
+    const origin = originDot === 'start' ? pair.start : pair.end;
+    const otherDot = originDot === 'start' ? pair.end : pair.start;
+    const lastCell = currentCells.length > 0 ? currentCells[currentCells.length - 1] : origin;
+
+    // Undo: clicking the last path cell removes it
+    if (row === lastCell[0] && col === lastCell[1]) {
+      if (currentCells.length === 0) { setSelectedColor(null); setOriginDot(null); return; }
+      const newCells = currentCells.slice(0, -1);
+      const newPaths = new Map(paths);
+      if (newCells.length === 0) newPaths.delete(selectedColor);
+      else newPaths.set(selectedColor, newCells);
+      setPaths(newPaths);
+      playNote(440, 0.08);
+      return;
+    }
+
+    // Check adjacency
+    const dr = Math.abs(row - lastCell[0]);
+    const dc = Math.abs(col - lastCell[1]);
+    if ((dr !== 1 || dc !== 0) && (dr !== 0 || dc !== 1)) return;
+
+    // Reached the other dot — complete
+    if (row === otherDot[0] && col === otherDot[1]) {
+      const newCells = [...currentCells, [row, col] as [number, number]];
+      const newPaths = new Map(paths);
+      newPaths.set(selectedColor, newCells);
+      setPaths(newPaths);
+      const nextCompleted = new Set(completed);
+      nextCompleted.add(selectedColor);
+      setCompleted(nextCompleted);
+      setSelectedColor(null);
+      setOriginDot(null);
+      playNote(440, 0.25);
+      if (nextCompleted.size === puzzle.pairs.length) {
+        setTimeout(() => { playNote(523, 0.15); setTimeout(() => playNote(659, 0.15), 150); setTimeout(() => playNote(784, 0.2), 300); }, 100);
+        setWon(true);
+      }
+      return;
+    }
+
+    // Extend path into empty cell
+    if (grid[row][col] === 0) {
+      const newCells = [...currentCells, [row, col] as [number, number]];
+      const newPaths = new Map(paths);
+      newPaths.set(selectedColor, newCells);
+      setPaths(newPaths);
+      playNote(880, 0.06);
+    }
+  }, [puzzle, grid, paths, completed, selectedColor, originDot, won]);
+
+  const resetPuzzle = useCallback(() => {
+    if (!puzzle) return;
     setPaths(new Map());
     setCompleted(new Set());
-    setWin(false);
-  };
-
-  const resetPuzzle = () => {
     setSelectedColor(null);
-    setPaths(new Map());
-    setCompleted(new Set());
-    setWin(false);
-  };
+    setOriginDot(null);
+    setWon(false);
+  }, [puzzle]);
+
+  const goToLevel = useCallback((lvl: number) => {
+    setLevel(lvl);
+    setShowLevelSelect(false);
+  }, []);
+
+  useEffect(() => {
+    setSelectedColor(null);
+    setOriginDot(null);
+  }, [puzzle]);
+
+  if (!puzzle) return (
+    <div className="w-full max-w-lg mx-auto px-4 flex items-center justify-center h-64 pb-16">
+      <p className="text-zinc-500 text-sm">Loading puzzle...</p>
+    </div>
+  );
 
   const cellSize = `calc(min(80vw, 320px) / ${puzzle.size})`;
 
@@ -1667,50 +1814,45 @@ function ConnectGame({ onBack }: { onBack: () => void }) {
     <div className="w-full max-w-lg mx-auto px-4 flex flex-col gap-4 pb-16">
       <div className="flex items-center gap-3 pt-4">
         <button onClick={onBack} className="p-2 text-zinc-400 hover:text-white hover:bg-white/5 rounded-lg transition-all cursor-pointer"><ArrowLeft className="w-5 h-5" /></button>
-        <div>
+        <div className="flex-1">
           <span className="text-[var(--accent)] font-mono text-[10px] font-bold tracking-[0.25em] uppercase">Mindful Play</span>
           <h2 className="font-serif text-2xl font-normal text-white leading-tight">Connect the Dots</h2>
         </div>
+        <button onClick={() => setShowLevelSelect(true)} className="text-zinc-500 hover:text-white transition-colors cursor-pointer px-2 py-1 rounded hover:bg-white/5 text-[10px] uppercase tracking-wider font-mono font-bold">Levels</button>
       </div>
       <div className="flex items-center justify-between text-xs font-mono text-zinc-400 px-1">
-        <span>Puzzle {puzzleIdx + 1}/{FLOW_PUZZLES.length}</span>
-        <span>{completed.size}/{puzzle.pairs.length} connected</span>
+        <button onClick={() => goToLevel(Math.max(1, level - 1))} disabled={level <= 1} className="text-zinc-500 hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer px-2 py-1 rounded hover:bg-white/5">◀ Prev</button>
+        <span>Level <span className="text-white font-bold">{level}</span>/{TOTAL_DOTS_LEVELS}</span>
+        <span className="text-zinc-500">{completed.size}/{puzzle.pairs.length} connected</span>
+        <button onClick={() => goToLevel(Math.min(TOTAL_DOTS_LEVELS, level + 1))} disabled={level >= TOTAL_DOTS_LEVELS} className="text-zinc-500 hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer px-2 py-1 rounded hover:bg-white/5">Next ▶</button>
         <button onClick={resetPuzzle} className="text-zinc-500 hover:text-white transition-colors cursor-pointer px-2 py-1 rounded hover:bg-white/5 text-[10px] uppercase tracking-wider"><RotateCcw className="w-3 h-3 inline mr-1" />Reset</button>
       </div>
-      <div
-        className="mx-auto border border-white/10 rounded-xl overflow-hidden select-none"
-        style={{ width: "min(100%, 320px)", touchAction: "none" }}
-      >
+      <div className="mx-auto border border-white/10 rounded-xl overflow-hidden select-none" style={{ width: "min(100%, 320px)", touchAction: "none" }}>
         {Array.from({ length: puzzle.size }, (_, ri) => (
           <div key={ri} className="flex" style={{ height: cellSize }}>
             {Array.from({ length: puzzle.size }, (_, ci) => {
               const val = grid[ri][ci];
-              const isDot = puzzle.pairs.some(p =>
-                (p.start[0] === ri && p.start[1] === ci) ||
-                (p.end[0] === ri && p.end[1] === ci)
-              );
               const pair = puzzle.pairs.find(p => p.color === val);
               const hex = pair?.hex || "#1a1a1a";
-              const isSelected = selectedColor === val && isDot;
+              const isDot = !!pair && ((pair.start[0] === ri && pair.start[1] === ci) || (pair.end[0] === ri && pair.end[1] === ci));
+              const isCompleted = !!pair && completed.has(pair.color);
+              const isSelected = selectedColor === val && isDot && !isCompleted;
+              const inPath = !isDot && val !== 0;
               return (
-                <div
-                  key={ci}
-                  onClick={() => handleCellClick(ri, ci)}
-                  className="flex-1 border-[0.5px] border-white/[0.03] flex items-center justify-center cursor-pointer transition-colors duration-100"
-                  style={{
-                    backgroundColor: val === 0 ? "#0b0b0c" : `${hex}22`,
-                  }}
-                >
+                <div key={ci} onClick={() => handleCellClick(ri, ci)} className="flex-1 border-[0.5px] border-white/[0.03] flex items-center justify-center cursor-pointer transition-colors duration-100 relative" style={{ backgroundColor: val === 0 ? "#0b0b0c" : `${hex}18` }}>
+                  {inPath && (
+                    <>
+                      {ri > 0 && grid[ri-1][ci] === val && <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[3px] h-1/2" style={{ backgroundColor: hex }} />}
+                      {ri < puzzle.size - 1 && grid[ri+1][ci] === val && <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[3px] h-1/2" style={{ backgroundColor: hex }} />}
+                      {ci > 0 && grid[ri][ci-1] === val && <div className="absolute top-1/2 left-0 -translate-y-1/2 h-[3px] w-1/2" style={{ backgroundColor: hex }} />}
+                      {ci < puzzle.size - 1 && grid[ri][ci+1] === val && <div className="absolute top-1/2 right-0 -translate-y-1/2 h-[3px] w-1/2" style={{ backgroundColor: hex }} />}
+                    </>
+                  )}
+                  {(isDot || inPath) && (
+                    <div className="absolute inset-[2px] rounded-sm" style={{ backgroundColor: `${hex}15` }} />
+                  )}
                   {isDot && (
-                    <div
-                      className="rounded-full transition-all duration-200"
-                      style={{
-                        width: isSelected ? "80%" : "60%",
-                        height: isSelected ? "80%" : "60%",
-                        backgroundColor: hex,
-                        boxShadow: isSelected ? `0 0 12px ${hex}80` : "none",
-                      }}
-                    />
+                    <div className="rounded-full transition-all duration-200 z-10" style={{ width: isSelected ? "85%" : isCompleted ? "70%" : "60%", height: isSelected ? "85%" : isCompleted ? "70%" : "60%", backgroundColor: hex, boxShadow: isSelected ? `0 0 16px ${hex}80` : isCompleted ? `0 0 8px ${hex}40` : "none", opacity: isCompleted ? 0.85 : 1 }} />
                   )}
                 </div>
               );
@@ -1718,15 +1860,30 @@ function ConnectGame({ onBack }: { onBack: () => void }) {
           </div>
         ))}
       </div>
-      {selectedColor !== null && (
-        <p className="text-center text-[10px] text-zinc-400 font-mono">
-          Tap adjacent cells to draw path · Tap last cell to undo
-        </p>
+      {selectedColor !== null && !won && (
+        <p className="text-center text-[10px] text-zinc-400 font-mono -mt-2">Tap adjacent cells to draw path · Tap last cell to undo</p>
       )}
-      {win && (
+      {won && (
         <div className="flex flex-col items-center gap-3 mt-2">
-          <p className="text-sm text-[var(--accent)] font-mono font-bold">All connected!</p>
-          <button onClick={nextPuzzle} className="bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-zinc-950 font-mono text-[10px] font-bold uppercase tracking-[0.2em] px-8 py-3 rounded hover:shadow-[0_0_30px_rgba(var(--accent-rgb),0.4)] transition-all active:scale-95 cursor-pointer">Next Puzzle</button>
+          <p className="text-sm text-[var(--accent)] font-mono font-bold">Level {level} Complete!</p>
+          <div className="flex gap-2">
+            <button onClick={resetPuzzle} className="inline-flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white font-mono text-[10px] font-bold uppercase tracking-[0.2em] px-6 py-3 rounded transition-all active:scale-95 cursor-pointer"><RotateCcw className="w-3 h-3" />Retry</button>
+            {level < TOTAL_DOTS_LEVELS && <button onClick={() => goToLevel(level + 1)} className="inline-flex items-center gap-2 bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-zinc-950 font-mono text-[10px] font-bold uppercase tracking-[0.2em] px-6 py-3 rounded hover:shadow-[0_0_30px_rgba(var(--accent-rgb),0.4)] transition-all active:scale-95 cursor-pointer">Level {level + 1} →</button>}
+          </div>
+        </div>
+      )}
+      {showLevelSelect && (
+        <div className="fixed inset-0 z-[200] bg-black/80 flex items-center justify-center p-4" onClick={() => setShowLevelSelect(false)}>
+          <div className="bg-zinc-900 border border-zinc-700 rounded-2xl p-6 max-w-md w-full max-h-[80vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <h3 className="text-lg font-semibold text-zinc-100 mb-4 text-center font-serif">Select Level</h3>
+            <div className="grid grid-cols-5 gap-2">
+              {Array.from({ length: TOTAL_DOTS_LEVELS }, (_, i) => i + 1).map(l => (
+                <button key={l} onClick={() => goToLevel(l)} className={`aspect-square rounded-xl text-xs font-mono font-bold transition-all cursor-pointer ${l === level ? "bg-[var(--accent)] text-zinc-950" : clearedLevels.has(l) ? "bg-[var(--accent)]/15 text-[var(--accent)] border border-[var(--accent)]/30" : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700 border border-zinc-700"}`}>
+                  {l}{clearedLevels.has(l) ? " ✓" : ""}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       )}
     </div>
