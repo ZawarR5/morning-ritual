@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { X, User, Flame, HelpCircle, Camera, Pencil, StickyNote, ChevronDown, BookOpen, MessageCircle, Lock, Download } from "lucide-react";
+import { X, User, Flame, HelpCircle, Camera, Pencil, StickyNote, ChevronDown, BookOpen, MessageCircle, Lock, Download, Share2 } from "lucide-react";
 import NotesView from "./NotesView";
 import { UserProfile } from "../types";
 import { moods } from "../themes";
@@ -42,7 +42,10 @@ export default function NavigationDrawer({
   const [editName, setEditName] = useState(profile?.name || "");
   const [showNotes, setShowNotes] = useState(false);
   const [showMoodPicker, setShowMoodPicker] = useState(false);
+  const [showIOSHint, setShowIOSHint] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
 
   return (
     <AnimatePresence>
@@ -272,14 +275,36 @@ export default function NavigationDrawer({
               </button>
             )}
 
-            {canInstall && onInstall && (
+            {(canInstall || isIOS) && onInstall && (
               <button
-                onClick={() => { onInstall(); }}
+                onClick={() => { isIOS ? setShowIOSHint(true) : onInstall(); }}
                 className="flex items-center gap-4 p-3 rounded-xl text-zinc-300 bg-[var(--accent)]/5 hover:bg-[var(--accent)]/15 border border-[var(--accent)]/20 transition-colors w-full text-left cursor-pointer mt-1"
               >
-                <Download className="w-5 h-5 text-[var(--accent)]" />
-                <span className="font-sans text-sm font-medium">Install App</span>
+                {isIOS ? <Share2 className="w-5 h-5 text-[var(--accent)]" /> : <Download className="w-5 h-5 text-[var(--accent)]" />}
+                <span className="font-sans text-sm font-medium">{isIOS ? "Add to Home Screen" : "Install App"}</span>
               </button>
+            )}
+
+            {showIOSHint && (
+              <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setShowIOSHint(false)}>
+                <div className="bg-zinc-900 border border-zinc-700 rounded-2xl p-6 max-w-sm w-full shadow-2xl" onClick={(e) => e.stopPropagation()}>
+                  <div className="text-center space-y-4">
+                    <div className="w-14 h-14 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mx-auto">
+                      <Share2 className="w-6 h-6 text-[var(--accent)]" />
+                    </div>
+                    <h3 className="font-serif text-lg text-white">Add to Home Screen</h3>
+                    <p className="text-sm text-zinc-400 leading-relaxed">
+                      Tap the <strong className="text-white">Share</strong> icon <Share2 className="w-4 h-4 inline text-[var(--accent)]" /> in Safari's bottom toolbar, then scroll down and tap <strong className="text-white">"Add to Home Screen"</strong>.
+                    </p>
+                    <button
+                      onClick={() => setShowIOSHint(false)}
+                      className="w-full bg-[var(--accent)] text-zinc-950 font-mono text-[10px] font-bold uppercase tracking-[0.2em] py-3 rounded hover:shadow-[0_0_30px_rgba(var(--accent-rgb),0.4)] transition-all active:scale-95 cursor-pointer"
+                    >
+                      Got it
+                    </button>
+                  </div>
+                </div>
+              </div>
             )}
 
             {/* Bottom Support section */}
