@@ -299,7 +299,7 @@ export default function SecretView({ onClose }: SecretViewProps) {
           <div className="p-4 max-w-5xl mx-auto">
             <div className="text-center py-12 select-none">
               <h2 className="text-3xl md:text-4xl text-white/90 leading-relaxed" style={{ fontFamily: "'Dancing Script', cursive", textShadow: "0 0 40px rgba(var(--accent-rgb),0.2)" }}>
-                Bas Tumse MIlne ki Der Thi
+                Bas Tumse Milne ki Der Thi
               </h2>
               <div className="mt-3 mx-auto w-16 h-px bg-gradient-to-r from-transparent via-[var(--accent)]/40 to-transparent" />
             </div>
@@ -339,8 +339,9 @@ export default function SecretView({ onClose }: SecretViewProps) {
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
           className="fixed inset-0 z-[300] bg-black/95 flex flex-col"
-          onTouchStart={(e) => { touchStartX.current = e.touches[0].clientX; }}
+          onTouchStart={(e) => { if (e.touches.length === 1) touchStartX.current = e.touches[0].clientX; }}
           onTouchEnd={(e) => {
+            if (e.changedTouches.length > 1) return;
             const dx = e.changedTouches[0].clientX - touchStartX.current;
             if (Math.abs(dx) > 60) {
               dx > 0 ? goPrev() : goNext();
