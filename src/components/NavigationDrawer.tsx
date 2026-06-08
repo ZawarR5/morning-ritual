@@ -1,6 +1,6 @@
 import React, { useState, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { X, User, Flame, HelpCircle, Camera, Pencil, StickyNote, ChevronDown, BookOpen, MessageCircle, Lock } from "lucide-react";
+import { X, User, Flame, HelpCircle, Camera, Pencil, StickyNote, ChevronDown, BookOpen, MessageCircle, Lock, Download } from "lucide-react";
 import NotesView from "./NotesView";
 import { UserProfile } from "../types";
 import { moods } from "../themes";
@@ -18,6 +18,8 @@ interface NavigationDrawerProps {
   onOpenQuran?: () => void;
   onOpenHadith?: () => void;
   onOpenSecret?: () => void;
+  onInstall?: () => void;
+  canInstall?: boolean;
 }
 
 export default function NavigationDrawer({
@@ -33,6 +35,8 @@ export default function NavigationDrawer({
   onOpenQuran,
   onOpenHadith,
   onOpenSecret,
+  onInstall,
+  canInstall,
 }: NavigationDrawerProps) {
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState(profile?.name || "");
@@ -265,6 +269,16 @@ export default function NavigationDrawer({
               >
                 <Lock className="w-5 h-5 text-[var(--accent)]" />
                 <span className="font-sans text-sm font-medium">Secret</span>
+              </button>
+            )}
+
+            {canInstall && onInstall && (
+              <button
+                onClick={() => { onInstall(); }}
+                className="flex items-center gap-4 p-3 rounded-xl text-zinc-300 bg-[var(--accent)]/5 hover:bg-[var(--accent)]/15 border border-[var(--accent)]/20 transition-colors w-full text-left cursor-pointer mt-1"
+              >
+                <Download className="w-5 h-5 text-[var(--accent)]" />
+                <span className="font-sans text-sm font-medium">Install App</span>
               </button>
             )}
 

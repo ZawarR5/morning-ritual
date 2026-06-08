@@ -76,6 +76,8 @@ export default function App() {
   const [showHadith, setShowHadith] = useState(false);
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   const [showSecret, setShowSecret] = useState(false);
+  const [canInstall, setCanInstall] = useState(false);
+  const deferredPrompt = useRef<Event | null>(null);
   const previousTab = useRef<TabId>("today");
 
   const TAB_ORDER: TabId[] = ["today", "rituals", "quiet", "4kul", "games"];
@@ -283,6 +285,27 @@ export default function App() {
     }
   }, [profile]);
 
+  // Capture install prompt event
+  useEffect(() => {
+    const handler = (e: Event) => {
+      e.preventDefault();
+      deferredPrompt.current = e;
+      setCanInstall(true);
+    };
+    window.addEventListener("beforeinstallprompt", handler);
+    return () => window.removeEventListener("beforeinstallprompt", handler);
+  }, []);
+
+  const handleInstall = useCallback(() => {
+    const prompt = deferredPrompt.current as any;
+    if (!prompt) return;
+    prompt.prompt();
+    prompt.userChoice.then(() => {
+      deferredPrompt.current = null;
+      setCanInstall(false);
+    });
+  }, []);
+
   // Handler functions
   const handleToggleRitual = (id: string) => {
     const updated = rituals.map((r) => {
@@ -412,6 +435,8 @@ export default function App() {
         onOpenQuran={() => setShowQuran(true)}
         onOpenHadith={() => setShowHadith(true)}
         onOpenSecret={() => setShowSecret(true)}
+        onInstall={handleInstall}
+        canInstall={canInstall}
       />
 
       {/* Morning notification toast */}
