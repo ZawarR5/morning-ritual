@@ -1,13 +1,15 @@
 import React from "react";
-import { Menu, User } from "lucide-react";
+import { Menu, User, Download } from "lucide-react";
 import { UserProfile } from "../types";
 
 interface HeaderProps {
   onToggleDrawer: () => void;
   profile: UserProfile | null;
+  onInstall?: () => void;
+  canInstall?: boolean;
 }
 
-export default function Header({ onToggleDrawer, profile }: HeaderProps) {
+export default function Header({ onToggleDrawer, profile, onInstall, canInstall }: HeaderProps) {
   return (
     <header className="fixed top-0 left-0 w-full z-50 bg-[#0b0b0c]/85 backdrop-blur-xl border-b border-white/10 shadow-[0_0_30px_-10px_rgba(var(--accent-rgb),0.15)] flex justify-between items-center px-6 h-16">
       <div className="flex items-center gap-4">
@@ -25,6 +27,15 @@ export default function Header({ onToggleDrawer, profile }: HeaderProps) {
         </h1>
       </div>
       <div className="flex items-center gap-4">
+        {canInstall && onInstall && (
+          <button
+            onClick={onInstall}
+            className="text-zinc-400 hover:text-[var(--accent)] hover:bg-white/5 p-2 rounded-lg transition-all cursor-pointer"
+            title="Install App"
+          >
+            <Download className="w-5 h-5" />
+          </button>
+        )}
         <div className="h-px w-16 bg-white/10 hidden sm:block"></div>
         <button 
           onClick={onToggleDrawer}

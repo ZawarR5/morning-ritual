@@ -419,7 +419,7 @@ export default function App() {
       <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[550px] h-[550px] bg-[#f2ca50]/[0.02] rounded-full blur-[120px] pointer-events-none -z-10" />
 
       {/* Main Header bar */}
-      <Header onToggleDrawer={() => setIsDrawerOpen(true)} profile={profile} />
+      <Header onToggleDrawer={() => setIsDrawerOpen(true)} profile={profile} onInstall={handleInstall} canInstall={canInstall} />
 
       {/* Slide Navigation Menu Drawer overlay */}
       <NavigationDrawer
