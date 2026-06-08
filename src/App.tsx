@@ -77,6 +77,7 @@ export default function App() {
   const [showExitConfirm, setShowExitConfirm] = useState(false);
   const [showSecret, setShowSecret] = useState(false);
   const [canInstall, setCanInstall] = useState(false);
+  const [showInstallHint, setShowInstallHint] = useState(false);
   const deferredPrompt = useRef<Event | null>(null);
   const previousTab = useRef<TabId>("today");
 
@@ -298,12 +299,15 @@ export default function App() {
 
   const handleInstall = useCallback(() => {
     const prompt = deferredPrompt.current as any;
-    if (!prompt) return;
-    prompt.prompt();
-    prompt.userChoice.then(() => {
-      deferredPrompt.current = null;
-      setCanInstall(false);
-    });
+    if (prompt) {
+      prompt.prompt();
+      prompt.userChoice.then(() => {
+        deferredPrompt.current = null;
+        setCanInstall(false);
+      });
+    } else {
+      setShowInstallHint(true);
+    }
   }, []);
 
   // Handler functions
@@ -419,7 +423,7 @@ export default function App() {
       <div className="fixed top-0 left-1/2 -translate-x-1/2 w-[550px] h-[550px] bg-[#f2ca50]/[0.02] rounded-full blur-[120px] pointer-events-none -z-10" />
 
       {/* Main Header bar */}
-      <Header onToggleDrawer={() => setIsDrawerOpen(true)} profile={profile} onInstall={handleInstall} canInstall={canInstall} />
+      <Header onToggleDrawer={() => setIsDrawerOpen(true)} profile={profile} onInstall={handleInstall} />
 
       {/* Slide Navigation Menu Drawer overlay */}
       <NavigationDrawer
@@ -436,7 +440,6 @@ export default function App() {
         onOpenHadith={() => setShowHadith(true)}
         onOpenSecret={() => setShowSecret(true)}
         onInstall={handleInstall}
-        canInstall={canInstall}
       />
 
       {/* Morning notification toast */}
@@ -585,6 +588,29 @@ export default function App() {
                 className="px-5 py-2 rounded-xl bg-[var(--accent)] text-black text-sm font-medium hover:opacity-90 transition-opacity"
               >
                 Exit
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showInstallHint && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setShowInstallHint(false)}>
+          <div className="bg-zinc-900 border border-zinc-700 rounded-2xl p-6 max-w-sm w-full shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="text-center space-y-4">
+              <div className="w-14 h-14 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mx-auto">
+                <svg className="w-6 h-6 text-[var(--accent)]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+              </div>
+              <h3 className="font-serif text-lg text-white">Install Morning Ritual</h3>
+              <p className="text-sm text-zinc-400 leading-relaxed">
+                Open Chrome menu (⋮) and tap <strong className="text-white">"Install app"</strong> or <strong className="text-white">"Add to Home Screen"</strong>.
+              </p>
+              <p className="text-xs text-zinc-500 font-mono">On iOS: Share <svg className="w-3.5 h-3.5 inline text-zinc-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg> → "Add to Home Screen"</p>
+              <button
+                onClick={() => setShowInstallHint(false)}
+                className="w-full bg-[var(--accent)] text-zinc-950 font-mono text-[10px] font-bold uppercase tracking-[0.2em] py-3 rounded hover:shadow-[0_0_30px_rgba(var(--accent-rgb),0.4)] transition-all active:scale-95 cursor-pointer"
+              >
+                Got it
               </button>
             </div>
           </div>
