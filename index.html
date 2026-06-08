@@ -16,6 +16,12 @@
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      window.addEventListener('beforeinstallprompt', function(e) {
+        e.preventDefault();
+        window.__deferredPrompt = e;
+      });
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

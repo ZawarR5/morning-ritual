@@ -286,8 +286,12 @@ export default function App() {
     }
   }, [profile]);
 
-  // Capture install prompt event
+  // Capture install prompt event (inline script in index.html fires first)
   useEffect(() => {
+    if ((window as any).__deferredPrompt) {
+      deferredPrompt.current = (window as any).__deferredPrompt;
+      setCanInstall(true);
+    }
     const handler = (e: Event) => {
       e.preventDefault();
       deferredPrompt.current = e;
