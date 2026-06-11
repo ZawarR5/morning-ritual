@@ -6,7 +6,18 @@ interface SecretViewProps {
   onClose: () => void;
 }
 
-const IMAGES = Array.from({ length: 7 }, (_, i) => `/secret/secret-${i + 1}.jpeg`);
+const IMAGE_COUNT = 7;
+
+function getAssetUrl(file: string, token: string) {
+  return `/api/secret-asset?file=${encodeURIComponent(file)}&token=${encodeURIComponent(token)}`;
+}
+
+async function sha256(input: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(input);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(hashBuffer)).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
 
 function SecretStars() {
   const stars = useMemo(() => {
@@ -95,17 +106,31 @@ export default function SecretView({ onClose }: SecretViewProps) {
   const [isVerifying, setIsVerifying] = useState(false);
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
   const [volume, setVolume] = useState(0.3);
+  const tokenRef = useRef<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const touchStartX = useRef(0);
-  const imageIndex = fullscreenImage ? IMAGES.indexOf(fullscreenImage) : -1;
+
+  const imageUrls = useMemo(() => {
+    if (!tokenRef.current) return [];
+    return Array.from({ length: IMAGE_COUNT }, (_, i) => getAssetUrl(`secret-${i + 1}.jpeg`, tokenRef.current!));
+  }, [showContent]);
+
+  const audioUrl = useMemo(() => {
+    if (!tokenRef.current) return "";
+    return getAssetUrl("Sitaare.mp3", tokenRef.current);
+  }, [showContent]);
+
+  const imageIndex = fullscreenImage ? imageUrls.indexOf(fullscreenImage) : -1;
 
   const goNext = useCallback(() => {
-    setFullscreenImage(IMAGES[(imageIndex + 1) % IMAGES.length]);
-  }, [imageIndex]);
+    if (imageUrls.length === 0) return;
+    setFullscreenImage(imageUrls[(imageIndex + 1) % imageUrls.length]);
+  }, [imageIndex, imageUrls]);
 
   const goPrev = useCallback(() => {
-    setFullscreenImage(IMAGES[(imageIndex - 1 + IMAGES.length) % IMAGES.length]);
-  }, [imageIndex]);
+    if (imageUrls.length === 0) return;
+    setFullscreenImage(imageUrls[(imageIndex - 1 + imageUrls.length) % imageUrls.length]);
+  }, [imageIndex, imageUrls]);
 
   useEffect(() => {
     if (!fullscreenImage) return;
@@ -118,8 +143,8 @@ export default function SecretView({ onClose }: SecretViewProps) {
   }, [fullscreenImage, goNext, goPrev]);
 
   useEffect(() => {
-    if (showContent && !audioRef.current) {
-      const audio = new Audio("/secret/Sitaare.mp3");
+    if (showContent && !audioRef.current && audioUrl) {
+      const audio = new Audio(audioUrl);
       audio.loop = true;
       audio.volume = volume;
       audio.play().catch(() => {});
@@ -129,7 +154,7 @@ export default function SecretView({ onClose }: SecretViewProps) {
       audioRef.current.pause();
       audioRef.current = null;
     }
-  }, [showContent]);
+  }, [showContent, audioUrl]);
 
   useEffect(() => {
     if (audioRef.current) audioRef.current.volume = volume;
@@ -150,13 +175,15 @@ export default function SecretView({ onClose }: SecretViewProps) {
     setIsVerifying(true);
     setError(false);
     try {
+      const hash = await sha256(input);
       const res = await fetch("/api/verify-secret", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ password: input }),
+        body: JSON.stringify({ hash }),
       });
       const data = await res.json();
-      if (data.success) {
+      if (data.success && data.token) {
+        tokenRef.current = data.token;
         setUnlocked(true);
       } else {
         setError(true);
@@ -288,7 +315,7 @@ export default function SecretView({ onClose }: SecretViewProps) {
           <div className="sticky top-0 z-10 bg-[#050505]/80 backdrop-blur-md border-b border-white/5 px-4 py-3 flex items-center justify-between">
             <div>
               <h2 className="font-serif text-lg text-white">Secret Vault</h2>
-              <p className="font-mono text-[10px] tracking-wider text-zinc-500 uppercase">{IMAGES.length} treasures</p>
+              <p className="font-mono text-[10px] tracking-wider text-zinc-500 uppercase">{IMAGE_COUNT} treasures</p>
             </div>
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2 bg-white/5 rounded-full px-3 py-1.5 border border-white/5">
@@ -317,7 +344,7 @@ export default function SecretView({ onClose }: SecretViewProps) {
               <div className="mt-3 mx-auto w-16 h-px bg-gradient-to-r from-transparent via-[var(--accent)]/40 to-transparent" />
             </div>
             <div className="columns-2 md:columns-3 gap-3 space-y-3">
-              {IMAGES.map((src, i) => (
+              {imageUrls.map((src, i) => (
                 <motion.button
                   key={src}
                   initial={{ opacity: 0, y: 20 }}
@@ -386,7 +413,7 @@ export default function SecretView({ onClose }: SecretViewProps) {
 
           <div className="absolute bottom-0 left-0 right-0 z-10 p-4 flex justify-center bg-gradient-to-t from-black/60 to-transparent">
             <div className="flex gap-2">
-              {IMAGES.map((src, i) => (
+              {imageUrls.map((src, i) => (
                 <button
                   key={src}
                   onClick={() => setFullscreenImage(src)}

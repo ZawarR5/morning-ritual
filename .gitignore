@@ -9,4 +9,5 @@ coverage/
 
 public/bg-music.mp3
 public/secret/
+private-assets/
 .vercel
