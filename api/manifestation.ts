@@ -1,6 +1,3 @@
-// Hardcoded Gemini API key for serverless use (add to Vercel env vars if possible later)
-process.env.GEMINI_API_KEY = process.env.GEMINI_API_KEY || "AIzaSyC9-qbjjhk9ME_NDXAL9VDqRde00_vwUAM";
-
 import { getQuoteForMindset } from "../src/quotes";
 
 export default async function handler(req: any, res: any) {

@@ -8,6 +8,15 @@ const PORT = parseInt(process.env.PORT || "3000", 10);
 
 app.use(express.json());
 
+app.post("/api/verify-secret", (req: express.Request, res: express.Response) => {
+  const { password } = req.body;
+  const secretPassword = process.env.SECRET_PASSWORD;
+  if (!secretPassword) {
+    return res.status(500).json({ success: false, error: "Server not configured" });
+  }
+  return res.json({ success: password === secretPassword });
+});
+
 app.post("/api/manifestation", async (req: express.Request, res: express.Response): Promise<any> => {
   const { notes, mindset } = req.body;
   const quote = getQuoteForMindset(mindset);

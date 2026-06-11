@@ -6,8 +6,6 @@ interface SecretViewProps {
   onClose: () => void;
 }
 
-const SECRET_PASSWORD = "78632792927";
-
 const IMAGES = Array.from({ length: 7 }, (_, i) => `/secret/secret-${i + 1}.jpeg`);
 
 function SecretStars() {
@@ -94,6 +92,7 @@ export default function SecretView({ onClose }: SecretViewProps) {
   const [unlocked, setUnlocked] = useState(false);
   const [showContent, setShowContent] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
   const [volume, setVolume] = useState(0.3);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -147,13 +146,27 @@ export default function SecretView({ onClose }: SecretViewProps) {
     }
   }, [unlocked]);
 
-  const handleSubmit = () => {
-    if (input === SECRET_PASSWORD) {
-      setUnlocked(true);
-      setError(false);
-    } else {
+  const handleSubmit = async () => {
+    setIsVerifying(true);
+    setError(false);
+    try {
+      const res = await fetch("/api/verify-secret", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password: input }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setUnlocked(true);
+      } else {
+        setError(true);
+        setInput("");
+      }
+    } catch {
       setError(true);
       setInput("");
+    } finally {
+      setIsVerifying(false);
     }
   };
 
@@ -225,10 +238,10 @@ export default function SecretView({ onClose }: SecretViewProps) {
 
                 <button
                   onClick={handleSubmit}
-                  disabled={!input}
+                  disabled={!input || isVerifying}
                   className="w-full bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-zinc-950 font-mono text-[10px] font-bold uppercase tracking-[0.2em] py-3 rounded hover:shadow-[0_0_30px_rgba(var(--accent-rgb),0.4)] transition-all active:scale-95 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
                 >
-                  Unlock
+                  {isVerifying ? "Verifying..." : "Unlock"}
                 </button>
               </div>
             ) : !showContent ? (
