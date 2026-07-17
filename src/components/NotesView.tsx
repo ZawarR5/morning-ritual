@@ -8,6 +8,7 @@ interface Note {
   content: string;
   createdAt: string;
   updatedAt: string;
+  eventDate?: string;
 }
 
 interface NotesViewProps {
@@ -33,11 +34,23 @@ function formatDate(dateStr: string) {
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
+function formatDateTime(dateStr: string) {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "numeric", minute: "2-digit" });
+}
+
+function toDatetimeLocal(iso: string): string {
+  const d = new Date(iso);
+  const pad = (n: number) => n.toString().padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 export default function NotesView({ isOpen, onClose }: NotesViewProps) {
   const [notes, setNotes] = useState<Note[]>(loadNotes);
   const [editingNote, setEditingNote] = useState<Note | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editContent, setEditContent] = useState("");
+  const [editEventDate, setEditEventDate] = useState("");
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [batchDeleteConfirm, setBatchDeleteConfirm] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -62,12 +75,14 @@ export default function NotesView({ isOpen, onClose }: NotesViewProps) {
     };
     setEditTitle("");
     setEditContent("");
+    setEditEventDate("");
     setEditingNote(newNote);
   };
 
   const handleEdit = (note: Note) => {
     setEditTitle(note.title);
     setEditContent(note.content);
+    setEditEventDate(note.eventDate ? toDatetimeLocal(note.eventDate) : "");
     setEditingNote(note);
   };
 
@@ -109,13 +124,14 @@ export default function NotesView({ isOpen, onClose }: NotesViewProps) {
   const handleSaveEdit = () => {
     if (!editingNote) return;
     const now = new Date().toISOString();
+    const eventDate = editEventDate ? new Date(editEventDate).toISOString() : undefined;
     const updated = notes.map((n) =>
       n.id === editingNote.id
-        ? { ...n, title: editTitle, content: editContent, updatedAt: now }
+        ? { ...n, title: editTitle, content: editContent, updatedAt: now, eventDate }
         : n
     );
     if (!notes.find((n) => n.id === editingNote.id)) {
-      updated.push({ ...editingNote, title: editTitle, content: editContent, updatedAt: now });
+      updated.push({ ...editingNote, title: editTitle, content: editContent, updatedAt: now, eventDate });
     }
     persist(updated);
     setEditingNote(null);
@@ -174,13 +190,14 @@ export default function NotesView({ isOpen, onClose }: NotesViewProps) {
         const merged = [...notes];
         let added = 0;
         for (const n of valid) {
-          if (!existingIds.has(n.id)) {
+            if (!existingIds.has(n.id)) {
             merged.push({
               id: n.id,
               title: n.title,
               content: n.content,
               createdAt: n.createdAt || new Date().toISOString(),
               updatedAt: n.updatedAt || new Date().toISOString(),
+              eventDate: n.eventDate || undefined,
             });
             added += 1;
           }
@@ -209,7 +226,8 @@ export default function NotesView({ isOpen, onClose }: NotesViewProps) {
       const q = searchQuery.toLowerCase();
       return (
         n.title.toLowerCase().includes(q) ||
-        n.content.toLowerCase().includes(q)
+        n.content.toLowerCase().includes(q) ||
+        (n.eventDate && formatDateTime(n.eventDate).toLowerCase().includes(q))
       );
     })
     .sort(
@@ -304,6 +322,25 @@ export default function NotesView({ isOpen, onClose }: NotesViewProps) {
                   placeholder="Write your note..."
                   className="flex-1 w-full bg-white/[0.02] border border-white/10 rounded-xl p-4 text-sm text-zinc-200 placeholder-zinc-600 resize-none focus:outline-none focus:border-[var(--accent)]/50 transition-colors font-sans leading-relaxed"
                 />
+                <div className="flex items-center gap-3">
+                  <div className="flex-1 flex items-center gap-2 bg-white/[0.02] border border-white/10 rounded-xl px-3 py-2.5">
+                    <input
+                      type="datetime-local"
+                      value={editEventDate}
+                      onChange={(e) => setEditEventDate(e.target.value)}
+                      className="flex-1 bg-transparent text-xs text-zinc-300 font-mono focus:outline-none [color-scheme:dark]"
+                    />
+                    {editEventDate && (
+                      <button
+                        onClick={() => setEditEventDate("")}
+                        className="text-zinc-500 hover:text-red-400 transition-colors cursor-pointer shrink-0"
+                        title="Clear date"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+                </div>
                 <div className="flex gap-3">
                   <button
                     onClick={() => setEditingNote(null)}
@@ -377,7 +414,12 @@ export default function NotesView({ isOpen, onClose }: NotesViewProps) {
                           <p className="text-xs text-zinc-500 mt-1 line-clamp-2 font-sans leading-relaxed">
                             {note.content || "Empty note"}
                           </p>
-                          <p className="text-[10px] text-zinc-600 font-mono mt-2 tracking-wider">
+                          {note.eventDate && (
+                            <p className="text-[11px] text-[var(--accent)] font-mono mt-2 tracking-wider">
+                              📅 {formatDateTime(note.eventDate)}
+                            </p>
+                          )}
+                          <p className="text-[10px] text-zinc-600 font-mono mt-1 tracking-wider">
                             {formatDate(note.updatedAt)}
                           </p>
                         </div>

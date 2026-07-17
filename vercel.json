@@ -2,6 +2,14 @@
   "framework": "vite",
   "buildCommand": "vite build",
   "outputDirectory": "dist",
+  "functions": {
+    "api/secret-asset.ts": {
+      "includeFiles": "private-assets/**"
+    },
+    "api/verify-secret.ts": {
+      "includeFiles": "private-assets/**"
+    }
+  },
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/(.*)", "destination": "/index.html" }

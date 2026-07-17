@@ -7,17 +7,8 @@ interface SecretViewProps {
 }
 
 const IMAGE_COUNT = 7;
-
-function getAssetUrl(file: string, token: string) {
-  return `/api/secret-asset?file=${encodeURIComponent(file)}&token=${encodeURIComponent(token)}`;
-}
-
-async function sha256(input: string): Promise<string> {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(input);
-  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-  return Array.from(new Uint8Array(hashBuffer)).map((b) => b.toString(16).padStart(2, "0")).join("");
-}
+const IMAGE_NAMES = Array.from({ length: IMAGE_COUNT }, (_, i) => `secret-${i + 1}.jpeg`);
+const STATIC_BASE = "/secret-data/";
 
 function SecretStars() {
   const stars = useMemo(() => {
@@ -106,19 +97,14 @@ export default function SecretView({ onClose }: SecretViewProps) {
   const [isVerifying, setIsVerifying] = useState(false);
   const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
   const [volume, setVolume] = useState(0.3);
-  const tokenRef = useRef<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const touchStartX = useRef(0);
 
   const imageUrls = useMemo(() => {
-    if (!tokenRef.current) return [];
-    return Array.from({ length: IMAGE_COUNT }, (_, i) => getAssetUrl(`secret-${i + 1}.jpeg`, tokenRef.current!));
-  }, [showContent]);
+    return IMAGE_NAMES.map((name) => `${STATIC_BASE}${name}`);
+  }, []);
 
-  const audioUrl = useMemo(() => {
-    if (!tokenRef.current) return "";
-    return getAssetUrl("Sitaare.mp3", tokenRef.current);
-  }, [showContent]);
+  const audioUrl = `${STATIC_BASE}Sitaare.mp3`;
 
   const imageIndex = fullscreenImage ? imageUrls.indexOf(fullscreenImage) : -1;
 
@@ -175,15 +161,17 @@ export default function SecretView({ onClose }: SecretViewProps) {
     setIsVerifying(true);
     setError(false);
     try {
-      const hash = await sha256(input);
+      const encoder = new TextEncoder();
+      const data = encoder.encode(input);
+      const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+      const hash = Array.from(new Uint8Array(hashBuffer)).map((b) => b.toString(16).padStart(2, "0")).join("");
       const res = await fetch("/api/verify-secret", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ hash }),
       });
-      const data = await res.json();
-      if (data.success && data.token) {
-        tokenRef.current = data.token;
+      const json = await res.json();
+      if (json.success) {
         setUnlocked(true);
       } else {
         setError(true);
