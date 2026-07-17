@@ -7,7 +7,5 @@ coverage/
 .env*
 !.env.example
 
-public/bg-music.mp3
-public/secret/
 private-assets/
 .vercel
